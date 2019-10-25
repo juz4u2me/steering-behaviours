@@ -2,6 +2,11 @@ import React, {Component} from 'react';
 import './css/App.css';
 import Map from './components/Map';
 import { Vector } from "@glazier/vector-js";
+import Behaviour from './js/behaviour'
+
+const MAX_VELOCITY = 10;
+const SLOWING_RADIUS = 20;
+const MAX_STEERING = 10;
 
 class App extends Component {
     constructor(props) {
@@ -28,39 +33,31 @@ class App extends Component {
         canvas.addEventListener("click", this.drawObstacle, { once: true });
     }
 
-    // Seek and Arrival
-    seek = () => {
-        var MAX_VELOCITY = 10;
-        var SLOWING_RADIUS = 20;
-        var position = this.state.startPt;
+    avoid = () => {
+
+    }
+
+    update = () => {
+
+        var vehicle = {
+            position : this.state.startPt,
+            velocity : new Vector(0, -50)
+        };
+        var b = new Behaviour(vehicle);
         var target = this.state.endPt;
-        var current_velocity = new Vector(0, 0);
-     
-        var desired = target.sub(position);
-        var distance = desired.length; 
 
-        while(distance > 0.1) {
-            
-            desired = target.sub(position);
-            distance = desired.length;
-            
-            var desired_velocity;
-            if(distance < SLOWING_RADIUS) {
-                // Inside the slowing area
-                desired_velocity = desired.normalize().mul(MAX_VELOCITY).mul(distance / SLOWING_RADIUS);
-            } else {
-                // Outside the slowing area.
-                desired_velocity = desired.normalize().mul(MAX_VELOCITY);
-            }
-            
-            var steering = desired_velocity.sub(current_velocity);
-            current_velocity = current_velocity.add(steering);
-            position = position.add(current_velocity);
-
-            this.drawMovement(position.toArray()[0], position.toArray()[1]);
+        var distance = target.sub(vehicle.position).length;
+        while(distance > 0.000001) {
+            b.seek(target);
+            b.update();
+            distance = target.sub(vehicle.position).length;
         }
-        
-        this.setState({ startPt : position });
+
+        this.setState({ startPt : vehicle.position });
+
+        // seek()
+        // avoid()
+        // update position
     }
 
     drawStartPoint = (e) => {
@@ -134,7 +131,7 @@ class App extends Component {
                 <button onClick={this.place_start_pt}>Place Start Point</button>
                 <button onClick={this.place_end_pt}>Place End Point</button>
                 <button onClick={this.place_obstacle}>Place Obstacle</button>
-                <button onClick={this.seek}>Seek</button>
+                <button onClick={this.update}>Seek</button>
             </div>
         )
     };
