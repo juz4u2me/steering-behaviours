@@ -55,67 +55,42 @@ class App extends Component {
     }
 
     drawStartPoint = (e) => {
-        var canvas = document.getElementById('nav-area');
-        var ctx = canvas.getContext("2d");
-        var rect = canvas.getBoundingClientRect();
-        var x = e.clientX - rect.left; // x == the location of the click in the document - the location (relative to the left) of the canvas in the document
-        var y = e.clientY - rect.top;
-
-        ctx.fillStyle = "#00FF00"; // Green color
-        ctx.beginPath();
-        ctx.arc(x, y, 5, 0, 2 * Math.PI, true);
-        ctx.stroke();
-        ctx.fill();
-
-        this.setState({ startPt : new Vector(x, y) });
+        var point = new Vector(e.clientX, e.clientY);
+        var drawnPt = this.drawPoint(point, 5, "#00FF00");
+        this.setState({ startPt : drawnPt });
     }
 
     drawEndPoint = (e) => {
-        var canvas = document.getElementById('nav-area');
-        var ctx = canvas.getContext("2d");   
-        var rect = canvas.getBoundingClientRect();
-        var x = e.clientX - rect.left; // x == the location of the click in the document - the location (relative to the left) of the canvas in the document
-        var y = e.clientY - rect.top;
-    
-        ctx.fillStyle = "#FF0000"; // Red color
-        ctx.beginPath();
-        // ctx.rect(x, y, 10, 10);
-        ctx.arc(x, y, 5, 0, 2 * Math.PI, true);
-        ctx.stroke();
-        ctx.fill();
-
-        this.setState({ endPt : new Vector(x, y) });
+        var point = new Vector(e.clientX, e.clientY);
+        var drawnPt = this.drawPoint(point, 5, "#FF0000");
+        this.setState({ endPt : drawnPt });
     }
 
     drawObstacle = (e) => {
-        var canvas = document.getElementById('nav-area');
-        var ctx = canvas.getContext("2d");   
-        var rect = canvas.getBoundingClientRect();
-        var x = e.clientX - rect.left; // x == the location of the click in the document - the location (relative to the left) of the canvas in the document
-        var y = e.clientY - rect.top;
-
-        ctx.fillStyle = "#FF0000"; // Red color
-        ctx.beginPath();
-        ctx.arc(x, y, 20, 0, 2 * Math.PI, true);
-        ctx.stroke();
-
+        var point = new Vector(e.clientX, e.clientY);
+        var drawnPt = this.drawPoint(point, 20, "#000000");
         var obs = this.state.obstacles;
-        obs.push(new Vector(x, y));
+        obs.push(drawnPt);
         this.setState({ obstacles : obs });
     }
 
-    drawMovement = (x, y) => {
+    drawPoint = (point, radius, color) => {
         var canvas = document.getElementById('nav-area');
         var ctx = canvas.getContext("2d");   
         var rect = canvas.getBoundingClientRect();
-        var x = x - rect.left; // x == the location of the click in the document - the location (relative to the left) of the canvas in the document
-        var y = y - rect.top;
-
-        ctx.fillStyle = "#00FF00"; // Green color
+        var x = point.toArray()[0] - rect.left; // x == the location of the click in the document - the location (relative to the left) of the canvas in the document
+        var y = point.toArray()[1] - rect.top;
+    
+        ctx.fillStyle = color; // Red color
         ctx.beginPath();
-        ctx.arc(x, y, 2, 0, 2 * Math.PI, true);
+        // ctx.rect(x, y, 10, 10);
+        ctx.arc(x, y, radius, 0, 2 * Math.PI, true);
         ctx.stroke();
         ctx.fill();
+
+        var pt = new Vector(x, y);
+
+        return pt;
     }
 
     render = () => {

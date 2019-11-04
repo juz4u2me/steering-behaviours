@@ -34,22 +34,7 @@ class Behaviour {
         }
         this.host.position = this.host.position.add(this.host.velocity);
 
-        var canvas = document.getElementById('nav-area');
-        var ctx = canvas.getContext("2d");   
-        var rect = canvas.getBoundingClientRect();
-        var x1 = previous.toArray()[0] - rect.left;
-        var y1 = previous.toArray()[1] - rect.top;
-        var x2 = this.host.position.toArray()[0] - rect.left;
-        var y2 = this.host.position.toArray()[1] - rect.top;
-
-        ctx.strokeStyle = "#FFA500"; // Orange color
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        // ctx.arc(x, y, 2, 0, 2 * Math.PI, true);
-        ctx.stroke();
-        ctx.fill();
-
+        this.drawLine(previous, this.host.position, '#FFA500');
         this.reset();
     }
 
@@ -82,22 +67,45 @@ class Behaviour {
 
     // Avoid
     doAvoid = (obstacles) => {
-        var obstacle_1 = obstacles[0];
+        // TODO: Issue with obstacles that are very close together
         var ahead = this.host.position.add(this.host.velocity.normalize().mul(MAX_LOOK_AHEAD));
         var ahead2 = this.host.position.add(this.host.velocity.normalize().mul(MAX_LOOK_AHEAD*0.5));
-        var d1 = this.distance(ahead, obstacle_1);
-        var d2 = this.distance(ahead2, obstacle_1);
+        var threat = this.getMostThreatening(ahead, ahead2, obstacles);
 
-        var avoidance_force = new Vector(0.0, 0.0);        
-        if(d1 < BUFFER || d2 < BUFFER) {
-
-            var avoidance_force = ahead.sub(obstacle_1);
+        var avoidance_force = new Vector(0.0, 0.0);
+        if(threat != null) {
+            avoidance_force = ahead.sub(threat);
             // if(avoidance_force.length > MAX_AVOIDANCE) {
-                avoidance_force = avoidance_force.normalize().mul(MAX_AVOIDANCE);
+            avoidance_force = avoidance_force.normalize().mul(MAX_AVOIDANCE);
             // }
         }
         
         return avoidance_force;
+    }
+
+    getMostThreatening = (ahead, ahead2, obstacles) => {
+        var position = this.host.position;
+        var mostThreatening = null;
+        for(var i=0; i<obstacles.length; i++) {
+            var obstacle = obstacles[i];
+            var collided = this.collided(ahead, ahead2, obstacle);
+
+            if(collided && (mostThreatening == null || this.distance(position, obstacle) < this.distance(position, mostThreatening))) {
+                mostThreatening = obstacle;
+            }
+        }
+
+        return mostThreatening;
+    }
+
+    collided = (ahead, ahead2, obstacle) => {
+        var d1 = this.distance(ahead, obstacle);
+        var d2 = this.distance(ahead2, obstacle);
+        if(d1 < BUFFER || d2 < BUFFER) {
+            return true;
+        }
+
+        return false;
     }
 
     distance = (a, b) => {
@@ -106,6 +114,23 @@ class Behaviour {
         var bx = b.toArray()[0];
         var by = b.toArray()[1];
         return Math.sqrt((ax - bx) * (ax - bx)  + (ay - by) * (ay - by));
+    }
+
+    drawLine = (start, end, color) => {
+        var canvas = document.getElementById('nav-area');
+        var ctx = canvas.getContext("2d");   
+        var rect = canvas.getBoundingClientRect();
+        var x1 = start.toArray()[0] - rect.left;
+        var y1 = start.toArray()[1] - rect.top;
+        var x2 = end.toArray()[0] - rect.left;
+        var y2 = end.toArray()[1] - rect.top;
+
+        ctx.strokeStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+        ctx.fill();
     }
 }
 
