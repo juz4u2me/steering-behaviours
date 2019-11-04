@@ -1,12 +1,7 @@
 import React, {Component} from 'react';
 import './css/App.css';
-import Map from './components/Map';
 import { Vector } from "@glazier/vector-js";
 import Behaviour from './js/behaviour'
-
-const MAX_VELOCITY = 10;
-const SLOWING_RADIUS = 20;
-const MAX_STEERING = 10;
 
 class App extends Component {
     constructor(props) {
@@ -33,8 +28,8 @@ class App extends Component {
         canvas.addEventListener("click", this.drawObstacle, { once: true });
     }
 
-    avoid = () => {
-
+    clear_obstacles = () => {
+        this.setState({ obstacles : []});
     }
 
     update = () => {
@@ -46,28 +41,27 @@ class App extends Component {
         var b = new Behaviour(vehicle);
         var target = this.state.endPt;
 
+        var obstacles = this.state.obstacles;
+
         var distance = target.sub(vehicle.position).length;
         while(distance > 0.000001) {
             b.seek(target);
+            b.avoid(obstacles);
             b.update();
             distance = target.sub(vehicle.position).length;
         }
 
         this.setState({ startPt : vehicle.position });
-
-        // seek()
-        // avoid()
-        // update position
     }
 
     drawStartPoint = (e) => {
         var canvas = document.getElementById('nav-area');
-        var ctx = canvas.getContext("2d");   
+        var ctx = canvas.getContext("2d");
         var rect = canvas.getBoundingClientRect();
         var x = e.clientX - rect.left; // x == the location of the click in the document - the location (relative to the left) of the canvas in the document
         var y = e.clientY - rect.top;
 
-        ctx.fillStyle = "#FF0000"; // Red color
+        ctx.fillStyle = "#00FF00"; // Green color
         ctx.beginPath();
         ctx.arc(x, y, 5, 0, 2 * Math.PI, true);
         ctx.stroke();
@@ -85,7 +79,8 @@ class App extends Component {
     
         ctx.fillStyle = "#FF0000"; // Red color
         ctx.beginPath();
-        ctx.rect(x, y, 10, 10);
+        // ctx.rect(x, y, 10, 10);
+        ctx.arc(x, y, 5, 0, 2 * Math.PI, true);
         ctx.stroke();
         ctx.fill();
 
@@ -125,13 +120,17 @@ class App extends Component {
 
     render = () => {
         return (
-            <div className='App'>                
-                <canvas className='nav-area' id='nav-area' width="800" height="800">                    
-                </canvas>
-                <button onClick={this.place_start_pt}>Place Start Point</button>
-                <button onClick={this.place_end_pt}>Place End Point</button>
-                <button onClick={this.place_obstacle}>Place Obstacle</button>
-                <button onClick={this.update}>Seek</button>
+            <div className='App'>
+                <div className='nav-div'>
+                    <canvas className='nav-area' id='nav-area' width="800" height="800" />
+                </div>
+                <div className='controls'>
+                    <button onClick={this.place_start_pt}>Place Start Point</button>
+                    <button onClick={this.place_end_pt}>Place End Point</button>
+                    <button onClick={this.place_obstacle}>Place Obstacle</button>
+                    <button onClick={this.clear_obstacles}>Clear Obstacles</button>
+                    <button onClick={this.update}>Seek</button>
+                </div>
             </div>
         )
     };
