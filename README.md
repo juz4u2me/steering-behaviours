@@ -1,7 +1,6 @@
 ## Description
 
-This project is an attempt to implement Craig Reynolds's steering behaviours using Javascript (React and NodeJS). The following behaviours are implemented to the best of my knowledge
-Simple behaviors for individuals and pairs:
+This project is an attempt to implement Craig Reynolds's steering behaviours using Javascript (React and NodeJS). The following behaviours are implemented to the best of my knowledge:
 1. Seek
 2. ~~Flee~~ & Arrival
 3. ~~Wander~~
@@ -12,19 +11,23 @@ Simple behaviors for individuals and pairs:
 8. ~~Queuing~~
 
 ## Table of Contents
+1. Description
+2. Table of Contents
+3. Installation
+4. Usage
+5. References
+6. Credits
 
 ## Installation
 
-1. Clone the project.
-
-2. Install node modules
+### `git clone https://github.com/juz4u2me/steering-behaviours.git`
+Clone the project.
 
 ### `npm install`
-
-3. Run the app in the development mode.<br />
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Install node modules.
 
 ### `npm start`
+Run the app in the development mode. Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
 ## Usage
 1. Pick a start point
