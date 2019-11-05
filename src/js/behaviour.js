@@ -3,8 +3,7 @@ import { Vector } from "@glazier/vector-js";
 const MAX_VELOCITY = 10;
 const SLOWING_RADIUS = 20;
 const MAX_STEERING = 10;
-const MAX_LOOK_AHEAD = 20;
-const BUFFER = 20.0;
+const BUFFER = 25.0;
 const MAX_AVOIDANCE = 10;
 
 class Behaviour {
@@ -68,18 +67,19 @@ class Behaviour {
     // Avoid
     doAvoid = (obstacles) => {
         // TODO: Issue with obstacles that are very close together
-        var ahead = this.host.position.add(this.host.velocity.normalize().mul(MAX_LOOK_AHEAD));
-        var ahead2 = this.host.position.add(this.host.velocity.normalize().mul(MAX_LOOK_AHEAD*0.5));
+        var dynamic_length = this.host.velocity.length / MAX_VELOCITY;
+        var ahead = this.host.position.add(this.host.velocity.normalize().mul(dynamic_length));
+        var ahead2 = this.host.position.add(this.host.velocity.normalize().mul(dynamic_length*0.5));
         var threat = this.getMostThreatening(ahead, ahead2, obstacles);
 
         var avoidance_force = new Vector(0.0, 0.0);
         if(threat != null) {
             avoidance_force = ahead.sub(threat);
-            // if(avoidance_force.length > MAX_AVOIDANCE) {
-            avoidance_force = avoidance_force.normalize().mul(MAX_AVOIDANCE);
-            // }
-        }
-        
+            if(avoidance_force.length > MAX_AVOIDANCE) {
+                avoidance_force = avoidance_force.normalize().mul(MAX_AVOIDANCE);
+                this.drawLine(threat, ahead, '#00FF00');
+            }
+        }   
         return avoidance_force;
     }
 
@@ -99,9 +99,11 @@ class Behaviour {
     }
 
     collided = (ahead, ahead2, obstacle) => {
+        var position = this.host.position;
         var d1 = this.distance(ahead, obstacle);
         var d2 = this.distance(ahead2, obstacle);
-        if(d1 < BUFFER || d2 < BUFFER) {
+        var d3 = this.distance(position, obstacle);
+        if(d1 <= BUFFER || d2 <= BUFFER || d3 <= BUFFER) {
             return true;
         }
 
