@@ -1,7 +1,8 @@
 import React, {Component} from 'react';
 import './css/App.css';
 import { Vector } from "@glazier/vector-js";
-import Behaviour from './js/behaviour'
+import Behaviour from './js/behaviour';
+import Painter from './js/painter';
 
 class App extends Component {
     constructor(props) {
@@ -56,41 +57,22 @@ class App extends Component {
 
     drawStartPoint = (e) => {
         var point = new Vector(e.clientX, e.clientY);
-        var drawnPt = this.drawPoint(point, 5, "#00FF00");
+        var drawnPt = Painter.drawPoint(point, 5, "#00FF00");
         this.setState({ startPt : drawnPt });
     }
 
     drawEndPoint = (e) => {
         var point = new Vector(e.clientX, e.clientY);
-        var drawnPt = this.drawPoint(point, 5, "#FF0000");
+        var drawnPt = Painter.drawPoint(point, 5, "#FF0000");
         this.setState({ endPt : drawnPt });
     }
 
     drawObstacle = (e) => {
         var point = new Vector(e.clientX, e.clientY);
-        var drawnPt = this.drawPoint(point, 20, "#000000");
+        var drawnPt = Painter.drawPoint(point, 20, "#000000");
         var obs = this.state.obstacles;
         obs.push(drawnPt);
         this.setState({ obstacles : obs });
-    }
-
-    drawPoint = (point, radius, color) => {
-        var canvas = document.getElementById('nav-area');
-        var ctx = canvas.getContext("2d");   
-        var rect = canvas.getBoundingClientRect();
-        var x = point.toArray()[0] - rect.left; // x == the location of the click in the document - the location (relative to the left) of the canvas in the document
-        var y = point.toArray()[1] - rect.top;
-    
-        ctx.fillStyle = color; // Red color
-        ctx.beginPath();
-        // ctx.rect(x, y, 10, 10);
-        ctx.arc(x, y, radius, 0, 2 * Math.PI, true);
-        ctx.stroke();
-        ctx.fill();
-
-        var pt = new Vector(x, y);
-
-        return pt;
     }
 
     render = () => {

@@ -1,17 +1,18 @@
 import { Vector } from "@glazier/vector-js";
+import Painter from './painter';
+import Collision from './collision'
 
 const MAX_VELOCITY = 10;
 const SLOWING_RADIUS = 20;
-const MAX_STEERING = 10;
-const BUFFER = 25.0;
-const MAX_AVOIDANCE = 10;
+const MAX_FORCE = 8; // Limits the acceleration for more fluid and natural movement
+const MAX_AVOIDANCE = 30;
 
 class Behaviour {
 
-    // host : object
+    // boid : object
     // steering : sum of all steering force acting on the object
-    constructor(host) {
-        this.host = host;
+    constructor(boid) {
+        this.boid = boid;
         this.steering = new Vector(0.0, 0.0);
     }
 
@@ -26,14 +27,13 @@ class Behaviour {
     } 
 
     update = () => {
-        var previous = this.host.position;
-        this.host.velocity = this.host.velocity.add(this.steering);
-        if(this.host.velocity.length > MAX_VELOCITY) {
-            this.host.velocity = this.host.velocity.normalize().mul(MAX_VELOCITY);
-        }
-        this.host.position = this.host.position.add(this.host.velocity);
+        var previous = this.boid.position;
+        this.steering = this.limitSteering(this.steering);
+        this.boid.velocity = this.boid.velocity.add(this.steering);        
+        this.boid.velocity = this.limitVelocity(this.boid.velocity);
+        this.boid.position = this.boid.position.add(this.boid.velocity);
 
-        this.drawLine(previous, this.host.position, '#FFA500');
+        Painter.drawLine(previous, this.boid.position, '#FFA500');
         this.reset();
     }
 
@@ -41,56 +41,58 @@ class Behaviour {
         this.steering = new Vector(0.0, 0.0);
     }
     
-    // Seek
+    // Seek & Arrival
     doSeek = (target) => {
-        var desired = target.sub(this.host.position);
+        var desired = target.sub(this.boid.position);
         var distance = desired.length;
 
-        // Arrival
         var desired_velocity;
         if(distance < SLOWING_RADIUS) {
-            // Inside the slowing area
+            // Arrival, inside the slowing area
             desired_velocity = desired.normalize().mul(MAX_VELOCITY).mul(distance / SLOWING_RADIUS);
         } else {
-            // Outside the slowing area.
             desired_velocity = desired.normalize().mul(MAX_VELOCITY);
         }
 
-        var steering_force = desired_velocity.sub(this.host.velocity);
-        if(steering_force.length > MAX_STEERING) {
-            steering_force = steering_force.normalize().mul(MAX_STEERING);
-        }
+        var steering_force = desired_velocity.sub(this.boid.velocity);
 
         return steering_force;
     }
 
     // Avoid
     doAvoid = (obstacles) => {
-        // TODO: Issue with obstacles that are very close together
-        var dynamic_length = this.host.velocity.length / MAX_VELOCITY;
-        var ahead = this.host.position.add(this.host.velocity.normalize().mul(dynamic_length));
-        var ahead2 = this.host.position.add(this.host.velocity.normalize().mul(dynamic_length*0.5));
+        var dynamic_length = this.boid.velocity.length / MAX_VELOCITY;
+        var ahead = this.boid.position.add(this.boid.velocity.normalize().mul(dynamic_length));
+        var ahead2 = this.boid.position.add(this.boid.velocity.normalize().mul(dynamic_length*0.5));
         var threat = this.getMostThreatening(ahead, ahead2, obstacles);
 
         var avoidance_force = new Vector(0.0, 0.0);
         if(threat != null) {
+            // var look_ahead = this.boid.velocity.normalize().mul(13);
             avoidance_force = ahead.sub(threat);
-            if(avoidance_force.length > MAX_AVOIDANCE) {
-                avoidance_force = avoidance_force.normalize().mul(MAX_AVOIDANCE);
-                this.drawLine(threat, ahead, '#00FF00');
-            }
-        }   
+            // avoidance_force = ahead.sub(threat);
+            avoidance_force = avoidance_force.normalize().mul(MAX_AVOIDANCE);
+        }
+        
         return avoidance_force;
     }
 
+    doAvoidAll = (obstacles) => {
+
+    }
+
     getMostThreatening = (ahead, ahead2, obstacles) => {
-        var position = this.host.position;
+        var position = this.boid.position;
         var mostThreatening = null;
+        var look_ahead = this.boid.velocity.normalize().mul(13);
+        var ahead_point = this.boid.position.add(look_ahead);
+        
         for(var i=0; i<obstacles.length; i++) {
             var obstacle = obstacles[i];
-            var collided = this.collided(ahead, ahead2, obstacle);
+            // var collided = this.collided(ahead, ahead2, obstacle);
+            var intercepted = Collision.intercept(this.boid.position, ahead_point, obstacle, 20.0);
 
-            if(collided && (mostThreatening == null || this.distance(position, obstacle) < this.distance(position, mostThreatening))) {
+            if(intercepted && (mostThreatening == null || Collision.distance(position, obstacle) < Collision.distance(position, mostThreatening))) {
                 mostThreatening = obstacle;
             }
         }
@@ -98,41 +100,25 @@ class Behaviour {
         return mostThreatening;
     }
 
-    collided = (ahead, ahead2, obstacle) => {
-        var position = this.host.position;
-        var d1 = this.distance(ahead, obstacle);
-        var d2 = this.distance(ahead2, obstacle);
-        var d3 = this.distance(position, obstacle);
-        if(d1 <= BUFFER || d2 <= BUFFER || d3 <= BUFFER) {
-            return true;
+    // Limits the amount of steering force acting on the boid, determines the fluidness of the motion
+    limitSteering = (steering_force) => {
+        if(steering_force.length > MAX_FORCE) {
+            steering_force = steering_force.normalize().mul(MAX_FORCE);
         }
 
-        return false;
+        return steering_force;
     }
 
-    distance = (a, b) => {
-        var ax = a.toArray()[0];
-        var ay = a.toArray()[1];
-        var bx = b.toArray()[0];
-        var by = b.toArray()[1];
-        return Math.sqrt((ax - bx) * (ax - bx)  + (ay - by) * (ay - by));
+    limitVelocity = (velocity) => {
+        if(velocity.length > MAX_VELOCITY) {
+            velocity = velocity.normalize().mul(MAX_VELOCITY);
+        }
+
+        return velocity;
     }
 
-    drawLine = (start, end, color) => {
-        var canvas = document.getElementById('nav-area');
-        var ctx = canvas.getContext("2d");   
-        var rect = canvas.getBoundingClientRect();
-        var x1 = start.toArray()[0] - rect.left;
-        var y1 = start.toArray()[1] - rect.top;
-        var x2 = end.toArray()[0] - rect.left;
-        var y2 = end.toArray()[1] - rect.top;
-
-        ctx.strokeStyle = color;
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.stroke();
-        ctx.fill();
+    getSteering = () => {
+        return this.steering;
     }
 }
 
