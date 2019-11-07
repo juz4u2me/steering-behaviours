@@ -1,12 +1,14 @@
+import VectorOps from './vectorops'
+
 const BUFFER = 20.0;
 
 class Collision {
 
     static collided = (ahead, ahead2, obstacle) => {
         var position = this.boid.position;
-        var d1 = this.distance(ahead, obstacle);
-        var d2 = this.distance(ahead2, obstacle);
-        var d3 = this.distance(position, obstacle);
+        var d1 = VectorOps.distance(ahead, obstacle);
+        var d2 = VectorOps.distance(ahead2, obstacle);
+        var d3 = VectorOps.distance(position, obstacle);
         if(d1 <= BUFFER || d2 <= BUFFER || d3 <= BUFFER) {
             return true;
         }
@@ -19,12 +21,12 @@ class Collision {
     // c - obstacle center
     // radius - radius of obstacle
     static intercept = (a, b, c, radius) => {
-        var ax = a.toArray()[0];
-        var ay = a.toArray()[1];
-        var bx = b.toArray()[0];
-        var by = b.toArray()[1];
-        var cx = c.toArray()[0];
-        var cy = c.toArray()[1];        
+        var ax = VectorOps.getX(a);
+        var ay = VectorOps.getY(a);
+        var bx = VectorOps.getX(b);
+        var by = VectorOps.getY(b);
+        var cx = VectorOps.getX(c);
+        var cy = VectorOps.getY(c);        
 
         var v1x = bx - ax;
         var v1y = by - ay;
@@ -46,19 +48,11 @@ class Collision {
                 Math.pow((bx - cx), 2.0) + Math.pow((by - cy), 2.0);
         }
 
-        var d = this.distance(a, c);        
+        var d = VectorOps.distance(a, c);        
         var within = (d <= BUFFER);
         var intercepted = (dist < radius*radius);
 
         return within || intercepted;
-    }
-
-    static distance = (a, b) => {
-        var ax = a.toArray()[0];
-        var ay = a.toArray()[1];
-        var bx = b.toArray()[0];
-        var by = b.toArray()[1];
-        return Math.sqrt((ax - bx) * (ax - bx)  + (ay - by) * (ay - by));
     }
 }
 

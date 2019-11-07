@@ -5,7 +5,7 @@ This project is an attempt to implement Craig Reynolds's steering behaviours usi
 2. ~~Flee~~ & Arrival
 3. ~~Wander~~
 4. ~~Pursuit & Evade~~
-5. Collision Avoidance
+5. Collision Avoidance (Point and Wall)
 6. ~~Path Following~~
 7. ~~Leader Following~~
 8. ~~Queuing~~
