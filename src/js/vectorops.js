@@ -38,6 +38,18 @@ class VectorOps {
 
         return new Vector(y, -x);
     }
+
+    // Return component of vector parallel to a unit vector
+    static parallelComp = (v, unit_vector) => {
+        var magnitude = v.dot(unit_vector);
+        
+        return unit_vector.mul(magnitude);
+    }
+
+    // Return component of vector perpendicular to a unit vector
+    static perpendicularComp = (v, unit_vector) => {
+        return v.sub(this.parallelComp(v, unit_vector));
+    }
 }
 
 export default VectorOps;
