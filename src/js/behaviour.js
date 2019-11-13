@@ -27,7 +27,21 @@ class Behaviour {
         this.steering = this.steering.add(avoided);
         var avoided_too = this.doAvoidWalls(walls);
         this.steering = this.steering.add(avoided_too);
-    } 
+    }
+    
+    // Seek only when there is no obstacles
+    avoidToSeek = (target, obstacles, walls) => {
+        var avoid_obstacles = this.doAvoid(obstacles);
+        // var avoid_walls = this.doAvoidWalls(walls);
+        if(avoid_obstacles.length > 0.000001) {
+            // this.steering = this.steering.add(avoid_walls);
+            this.steering = this.steering.add(avoid_obstacles);
+        }
+        else {
+            var steered = this.doSeek(target);
+            this.steering = this.steering.add(steered);
+        }
+    }
 
     update = () => {
         var previous = this.boid.position;
@@ -71,9 +85,8 @@ class Behaviour {
 
         var avoidance_force = new Vector(0.0, 0.0);
         if(threat != null) {
-            // var look_ahead = this.boid.velocity.normalize().mul(13);
-            avoidance_force = ahead.sub(threat);
-            // avoidance_force = ahead.sub(threat);
+            var push_vector = this.boid.position.sub(threat);
+            var avoidance_force = VectorOps.perpendicularComp(push_vector, this.boid.velocity.normalize());
             avoidance_force = avoidance_force.normalize().mul(MAX_AVOIDANCE);
         }
         

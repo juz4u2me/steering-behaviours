@@ -82,8 +82,9 @@ class App extends Component {
 
         var distance = target.sub(vehicle.position).length;
         while(distance > 0.000001) {
-            b.seek(target);
-            b.avoid(obstacles, walls);
+            // b.seek(target);
+            // b.avoid(obstacles, walls);
+            b.avoidToSeek(target, obstacles, walls);
             b.update();
             distance = target.sub(vehicle.position).length; 
         }
