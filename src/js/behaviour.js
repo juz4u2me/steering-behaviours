@@ -27,7 +27,7 @@ class Behaviour {
     
     // Seek only when there is no obstacles
     avoidToSeek = (target, obstacles, walls) => {
-        var avoid_obstacles = this.doAvoid(obstacles);
+        var avoid_obstacles = this.doAvoidAll(obstacles);
         // var avoid_walls = this.doAvoidWalls(walls);
         if(avoid_obstacles.length > 0.000001) {
             // this.steering = this.steering.add(avoid_walls);
@@ -60,8 +60,7 @@ class Behaviour {
         var distance = desired.length;
 
         var desired_velocity;
-        if(distance < SLOWING_RADIUS) {
-            // Arrival, inside the slowing area
+        if(distance < SLOWING_RADIUS) {            
             desired_velocity = desired.normalize().mul(MAX_VELOCITY).mul(distance / SLOWING_RADIUS);
         } else {
             desired_velocity = desired.normalize().mul(MAX_VELOCITY);
@@ -72,15 +71,9 @@ class Behaviour {
         return steering_force;
     }
 
-    // Avoid most threatening obstacle
+    // Avoid the most threatening obstacle
     doAvoid = (obstacles) => {
-        var dynamic_length = this.boid.velocity.length / MAX_VELOCITY;
-        var ahead = this.boid.position.add(this.boid.velocity.normalize().mul(dynamic_length));
-        var ahead2 = this.boid.position.add(this.boid.velocity.normalize().mul(dynamic_length*0.5));
-        var threat = this.getMostThreatening(ahead, ahead2, obstacles);
-        console.log('=====Most Threatening=====')
-        console.log(threat);
-
+        var threat = this.getMostThreatening(obstacles);
         var avoidance_force = new Vector(0.0, 0.0);
         if(threat != null) {
             var push_vector = this.boid.position.sub(threat);
@@ -93,21 +86,15 @@ class Behaviour {
 
     // Avoid all obstacles within range
     doAvoidAll = (obstacles) => {
-
-        var dynamic_length = this.boid.velocity.length / MAX_VELOCITY;
-        var ahead = this.boid.position.add(this.boid.velocity.normalize().mul(dynamic_length));
-
         var position = this.boid.position;
-        var look_ahead = this.boid.velocity.normalize().mul(20);
-        var ahead_point = position.add(look_ahead);
         var avoidance_force = new Vector(0.0, 0.0);
         var count = 0;
         for(var i=0; i<obstacles.length; i++) {
             var obstacle = obstacles[i];
-            var intercepted = Collision.intercept(position, ahead_point, obstacle, 20.0);
-            if(intercepted) {
-                var single_avoidance_force = ahead.sub(obstacle);
-                single_avoidance_force = single_avoidance_force.normalize();
+            var willIntersect = Collision.willIntersect(this.boid, obstacle);
+            if(willIntersect) {
+                var push_vector = position.sub(obstacle);
+                var single_avoidance_force = VectorOps.perpendicularComp(push_vector, this.boid.velocity.normalize());
                 avoidance_force = avoidance_force.add(single_avoidance_force);
                 count++;
             }
@@ -157,19 +144,11 @@ class Behaviour {
         return wall_avoidance_force;
     }
 
-    getMostThreatening = (ahead, ahead2, obstacles) => {
+    getMostThreatening = (obstacles) => {
         var position = this.boid.position;
-        var mostThreatening = null;
-        var look_ahead = this.boid.velocity.normalize().mul(13);
-        var ahead_point = this.boid.position.add(look_ahead);
-        
-        // TODO: Investigate why object goes into bounds of obstacle
+        var mostThreatening = null;        
         for(var i=0; i<obstacles.length; i++) {
             var obstacle = obstacles[i];
-            // console.log('=====Obstacle=====');
-            // console.log(obstacle);
-            // var collided = this.collided(ahead, ahead2, obstacle);
-            var intercepted = Collision.intercept(this.boid.position, ahead_point, obstacle, 20.0);
             var willIntersect = Collision.willIntersect(this.boid, obstacle);
 
             if(willIntersect && (mostThreatening == null || VectorOps.distance(position, obstacle) < VectorOps.distance(position, mostThreatening))) {

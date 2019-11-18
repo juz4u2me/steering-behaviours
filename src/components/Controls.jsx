@@ -54,6 +54,10 @@ export default class Palette extends Component {
         this.props.clearObstacles();
     }
 
+    load_env = () => {
+        this.props.loadEnvironment();
+    }
+
     seek = () => {
         this.props.seek();
     }
@@ -66,6 +70,7 @@ export default class Palette extends Component {
                 <button className="toolbutton" onClick={this.place_end_pt}>Place End Point</button>
                 <button className="toolbutton" onClick={this.place_obstacle}>Place Obstacle</button>
                 <button className="toolbutton" onClick={this.clear_obstacles}>Clear Obstacles</button>
+                <button className="toolbutton" onClick={this.load_env}>Load Test Environment</button>
                 <button className="toolbutton" onClick={this.seek}>Seek</button>
             </div>
         );

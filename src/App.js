@@ -18,10 +18,10 @@ class App extends Component {
     }
 
     componentDidMount = () => {
-        this.setUpEnvironment();
+        this.resizeCanvas();
     }
 
-    setUpEnvironment = () => {
+    loadEnvironment = () => {
         this.resizeCanvas();
 
         var p1 = new Vector(300, 600);
@@ -66,8 +66,6 @@ class App extends Component {
 
         var distance = target.sub(vehicle.position).length;
         while(distance > 0.000001) {
-            // b.seek(target);
-            // b.avoid(obstacles, walls);
             b.avoidToSeek(target, obstacles, walls);
             b.update();
             distance = target.sub(vehicle.position).length; 
@@ -81,7 +79,7 @@ class App extends Component {
         var displayWidth  = canvas.clientWidth;
         var displayHeight = canvas.clientHeight;
 
-        // Check if the canvas is not the same size.
+        // Check if the canvas is not the same size
         if (canvas.width  !== displayWidth ||
             canvas.height !== displayHeight) {
 
@@ -119,6 +117,7 @@ class App extends Component {
                     addEndPt={(end) => this.addEndPt(end)}
                     addObstacle={(obs) => this.addObstacle(obs)}
                     clearObstacles={this.clearObstacles}
+                    loadEnvironment={this.loadEnvironment}
                     seek={this.update}></Controls>
             </div>
         )
