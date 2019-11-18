@@ -1,6 +1,6 @@
-import VectorOps from './vectorops'
-
-const BUFFER = 20.0;
+import VectorOps from './vectorops';
+import Painter from './painter';
+import { BUFFER, OBSTACLE_SIZE, MIN_COLLISION_TIME, VEHICLE_SIZE } from './const'
 
 class Collision {
 
@@ -15,6 +15,55 @@ class Collision {
 
         return false;
     }
+
+    // findNextIntersectionWithSphere (SphericalObstacle& obs, PathIntersection& intersection) {
+    //     // xxx"SphericalObstacle& obs" should be "const SphericalObstacle&
+    //     // obs" but then it won't let me store a pointer to in inside the
+    //     // PathIntersection
+
+    //     // This routine is based on the Paul Bourke's derivation in:
+    //     //   Intersection of a Line and a Sphere (or circle)
+    //     //   http://www.swin.edu.au/astronomy/pbourke/geometry/sphereline/
+
+    //     float b, c, d, p, q, s;
+    //     Vec3 lc;
+
+    //     // initialize pathIntersection object
+    //     intersection.intersect = false;
+    //     intersection.obstacle = &obs;
+
+    //     // find "local center" (lc) of sphere in boid's coordinate space
+    //     lc = localizePosition (obs.center);
+
+    //     // computer line-sphere intersection parameters
+    //     b = -2 * lc.z;
+    //     c = square (lc.x) + square (lc.y) + square (lc.z) - 
+    //     square (obs.radius + radius());
+    //     d = (b * b) - (4 * c);
+
+    //     // when the path does not intersect the sphere
+    //     if (d < 0) return;
+
+    //     // otherwise, the path intersects the sphere in two points with
+    //     // parametric coordinates of "p" and "q".
+    //     // (If "d" is zero the two points are coincident, the path is tangent)
+    //     s = sqrtXXX (d);
+    //     p = (-b + s) / 2;
+    //     q = (-b - s) / 2;
+
+    //     // both intersections are behind us, so no potential collisions
+    //     if ((p < 0) && (q < 0)) return; 
+
+    //     // at least one intersection is in front of us
+    //     intersection.intersect = true;
+    //     intersection.distance =
+    //     ((p > 0) && (q > 0)) ?
+    //     // both intersections are in front of us, find nearest one
+    //     ((p < q) ? p : q) :
+    //     // otherwise only one intersections is in front, select it
+    //     ((p > 0) ? p : q);
+    //     return;
+    // }
 
     // a - start point of line
     // b - end point of line
@@ -53,6 +102,32 @@ class Collision {
         var intercepted = (dist < radius*radius);
 
         return within || intercepted;
+    }
+
+    static willIntersect = (vehicle, obstacle) => {
+        var minDistanceToCollision = MIN_COLLISION_TIME * vehicle.velocity.length; // 1s, 10km/h, 2.77778m/s
+        var minDistanceToCenter = minDistanceToCollision + OBSTACLE_SIZE; // 1s*10km/h, 7m
+        var totalRadius = OBSTACLE_SIZE + VEHICLE_SIZE;
+
+        var vAFV = obstacle.sub(vehicle.position); // vector away from vehicle towards obstacle
+        var forwardComponent = vAFV.dot(vehicle.velocity);
+
+        var push_vector = VectorOps.perpendicularComp(vAFV.mul(-1), vehicle.velocity.normalize()); // vector perpendicular to vehicle velocity from obstacle
+
+        // Test to see if sphere overlaps with obstacle-free corridor
+        var inCylinder = push_vector.length < totalRadius;
+        var nearby = forwardComponent < minDistanceToCenter; // Problem seems to lie here
+        var inFront = forwardComponent > 0;
+
+        // if all three conditions are met, steer away from sphere center
+        if (inCylinder && nearby && inFront)
+        { 
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 }
 

@@ -3,7 +3,7 @@ import './css/App.css';
 import { Vector } from "@glazier/vector-js";
 import Behaviour from './js/behaviour';
 import Painter from './js/painter';
-import VectorOps from './js/vectorops';
+import { OBSTACLE_SIZE } from './js/const'
 
 class App extends Component {
     constructor(props) {
@@ -72,7 +72,7 @@ class App extends Component {
 
         var vehicle = {
             position : this.state.startPt,
-            velocity : new Vector(0, -50)
+            velocity : new Vector(0, -2.7)
         };
         var b = new Behaviour(vehicle);
         var target = this.state.endPt;
@@ -106,7 +106,7 @@ class App extends Component {
 
     drawObstacle = (e) => {
         var point = new Vector(e.clientX, e.clientY);
-        var drawnPt = Painter.drawPoint(point, 20, "#000000");
+        var drawnPt = Painter.drawPoint(point, OBSTACLE_SIZE, "#000000");
         var obs = this.state.obstacles;
         obs.push(drawnPt);
         this.setState({ obstacles : obs });

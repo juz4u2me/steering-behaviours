@@ -2,11 +2,7 @@ import { Vector } from "@glazier/vector-js";
 import Painter from './painter';
 import Collision from './collision'
 import VectorOps from './vectorops'
-
-const MAX_VELOCITY = 10;
-const SLOWING_RADIUS = 20;
-const MAX_FORCE = 8; // Limits the acceleration for more fluid and natural movement
-const MAX_AVOIDANCE = 30;
+import { SLOWING_RADIUS, MAX_VELOCITY, MAX_FORCE, MAX_AVOIDANCE } from './const'
 
 class Behaviour {
 
@@ -76,12 +72,14 @@ class Behaviour {
         return steering_force;
     }
 
-    // Avoid
+    // Avoid most threatening obstacle
     doAvoid = (obstacles) => {
         var dynamic_length = this.boid.velocity.length / MAX_VELOCITY;
         var ahead = this.boid.position.add(this.boid.velocity.normalize().mul(dynamic_length));
         var ahead2 = this.boid.position.add(this.boid.velocity.normalize().mul(dynamic_length*0.5));
         var threat = this.getMostThreatening(ahead, ahead2, obstacles);
+        console.log('=====Most Threatening=====')
+        console.log(threat);
 
         var avoidance_force = new Vector(0.0, 0.0);
         if(threat != null) {
@@ -165,12 +163,16 @@ class Behaviour {
         var look_ahead = this.boid.velocity.normalize().mul(13);
         var ahead_point = this.boid.position.add(look_ahead);
         
+        // TODO: Investigate why object goes into bounds of obstacle
         for(var i=0; i<obstacles.length; i++) {
             var obstacle = obstacles[i];
+            // console.log('=====Obstacle=====');
+            // console.log(obstacle);
             // var collided = this.collided(ahead, ahead2, obstacle);
             var intercepted = Collision.intercept(this.boid.position, ahead_point, obstacle, 20.0);
+            var willIntersect = Collision.willIntersect(this.boid, obstacle);
 
-            if(intercepted && (mostThreatening == null || VectorOps.distance(position, obstacle) < VectorOps.distance(position, mostThreatening))) {
+            if(willIntersect && (mostThreatening == null || VectorOps.distance(position, obstacle) < VectorOps.distance(position, mostThreatening))) {
                 mostThreatening = obstacle;
             }
         }
