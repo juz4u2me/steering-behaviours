@@ -1,0 +1,12 @@
+.controls {
+    position : absolute;
+    top : 10px;
+    left: 10px;
+    display: flex;
+    flex-flow: column nowrap;
+}
+
+.toolbutton {
+    width: 100px;
+    height: 50px;
+}

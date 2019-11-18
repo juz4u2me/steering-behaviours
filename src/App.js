@@ -3,7 +3,8 @@ import './css/App.css';
 import { Vector } from "@glazier/vector-js";
 import Behaviour from './js/behaviour';
 import Painter from './js/painter';
-import { OBSTACLE_SIZE } from './js/const'
+import Controls from './components/Controls';
+import { OBSTACLE_SIZE } from './js/const';
 
 class App extends Component {
     constructor(props) {
@@ -21,6 +22,8 @@ class App extends Component {
     }
 
     setUpEnvironment = () => {
+        this.resizeCanvas();
+
         var p1 = new Vector(300, 600);
         Painter.label(p1, 'p1');
         var p2 = new Vector(300, 250);
@@ -49,25 +52,6 @@ class App extends Component {
         this.setState({ walls : walls });
     }
 
-    place_start_pt = () => {
-        var canvas = document.getElementById('nav-area');
-        canvas.addEventListener("click", this.drawStartPoint, { once: true });        
-    }
-
-    place_end_pt = () => {
-        var canvas = document.getElementById('nav-area');
-        canvas.addEventListener("click", this.drawEndPoint, { once: true });
-    }
-
-    place_obstacle = () => {
-        var canvas = document.getElementById('nav-area');
-        canvas.addEventListener("click", this.drawObstacle, { once: true });
-    }
-
-    clear_obstacles = () => {
-        this.setState({ obstacles : []});
-    }
-
     update = () => {
 
         var vehicle = {
@@ -92,24 +76,37 @@ class App extends Component {
         this.setState({ startPt : vehicle.position });
     }
 
-    drawStartPoint = (e) => {
-        var point = new Vector(e.clientX, e.clientY);
-        var drawnPt = Painter.drawPoint(point, 5, "#00FF00");
-        this.setState({ startPt : drawnPt });
+    resizeCanvas = () => {
+        var canvas = document.getElementById('nav-area');
+        var displayWidth  = canvas.clientWidth;
+        var displayHeight = canvas.clientHeight;
+
+        // Check if the canvas is not the same size.
+        if (canvas.width  !== displayWidth ||
+            canvas.height !== displayHeight) {
+
+            // Make the canvas the same size
+            canvas.width  = displayWidth;
+            canvas.height = displayHeight;
+        }
     }
 
-    drawEndPoint = (e) => {
-        var point = new Vector(e.clientX, e.clientY);
-        var drawnPt = Painter.drawPoint(point, 5, "#FF0000");
-        this.setState({ endPt : drawnPt });
+    addStartPt = (start) => {
+        this.setState({ startPt : start });
     }
 
-    drawObstacle = (e) => {
-        var point = new Vector(e.clientX, e.clientY);
-        var drawnPt = Painter.drawPoint(point, OBSTACLE_SIZE, "#000000");
+    addEndPt = (end) => {
+        this.setState({ endPt : end });
+    }
+
+    addObstacle = (obstacle) => {
         var obs = this.state.obstacles;
-        obs.push(drawnPt);
-        this.setState({ obstacles : obs });
+        obs.push(obstacle);
+        this.setState({ obstacles : obs }, ()=>{console.log(this.state.obstacles)} );
+    }
+
+    clearObstacles = () => {
+        this.setState({ obstacles : [] });
     }
 
     render = () => {
@@ -118,13 +115,11 @@ class App extends Component {
                 <div className='nav-div'>
                     <canvas className='nav-area' id='nav-area' width="800" height="800" />
                 </div>
-                <div className='controls'>
-                    <button onClick={this.place_start_pt}>Place Start Point</button>
-                    <button onClick={this.place_end_pt}>Place End Point</button>
-                    <button onClick={this.place_obstacle}>Place Obstacle</button>
-                    <button onClick={this.clear_obstacles}>Clear Obstacles</button>
-                    <button onClick={this.update}>Seek</button>
-                </div>
+                <Controls addStartPt={(start) => this.addStartPt(start)}
+                    addEndPt={(end) => this.addEndPt(end)}
+                    addObstacle={(obs) => this.addObstacle(obs)}
+                    clearObstacles={this.clearObstacles}
+                    seek={this.update}></Controls>
             </div>
         )
     };
