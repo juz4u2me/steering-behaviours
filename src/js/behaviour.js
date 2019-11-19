@@ -32,10 +32,12 @@ class Behaviour {
         if(avoid_obstacles.length > 0.000001) {
             // this.steering = this.steering.add(avoid_walls);
             this.steering = this.steering.add(avoid_obstacles);
+            // Painter.label(this.boid.position, 'Avoid');
         }
         else {
             var steered = this.doSeek(target);
             this.steering = this.steering.add(steered);
+            // Painter.label(this.boid.position, 'Seek');
         }
     }
 

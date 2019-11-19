@@ -42,7 +42,7 @@ class Painter {
     static label = (point, text) => {
         var canvas = document.getElementById('nav-area');
         var ctx = canvas.getContext("2d");
-        ctx.font = "15px Arial";
+        ctx.font = "5px Arial";
         ctx.fillText(text, VectorOps.getX(point)-5, VectorOps.getY(point)-5);
     }
 }

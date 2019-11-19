@@ -62,7 +62,7 @@ class Collision {
         var totalRadius = OBSTACLE_SIZE + VEHICLE_SIZE;
 
         var vAFV = obstacle.sub(vehicle.position); // vector away from vehicle towards obstacle
-        var forwardComponent = vAFV.dot(vehicle.velocity.normalize()); // distance of vAFV in the direction of vehicle velocity
+        var forwardComponent = vAFV.dot(vehicle.velocity);
 
         var push_vector = VectorOps.perpendicularComp(vAFV.mul(-1), vehicle.velocity.normalize()); // vector perpendicular to vehicle velocity from obstacle
 
