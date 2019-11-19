@@ -11,7 +11,7 @@ export const OBSTACLE_SIZE = 7.0*SCALE;
 
 // Collision
 export const SLOWING_RADIUS = 10*SCALE;
-export const MAX_FORCE = 2*SCALE; // Limits the acceleration for more fluid and natural movement
-export const MAX_AVOIDANCE = 2*SCALE;
+export const MAX_FORCE = MAX_SPEED*0.4; // Limits the acceleration for more fluid and natural movement
+export const MAX_AVOIDANCE = MAX_SPEED*0.4;
 export const MIN_COLLISION_TIME = 15.0*SCALE; // 15 second to collision
 export const BUFFER = 20.0*SCALE;

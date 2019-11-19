@@ -126,7 +126,7 @@ class Behaviour {
             var a = ahead_point.sub(wall[0]);
             var b = wall[1].sub(wall[0]);
             var theta = VectorOps.angleBetween(a, b);
-            // var d = a.length*Math.sin(theta);                   
+            // var d = a.length*Math.sin(theta);
             b = b.normalize();
             b = b.mul(a.dot(b));
             var normPt = wall[0].add(b);

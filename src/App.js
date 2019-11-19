@@ -4,7 +4,6 @@ import { Vector } from "@glazier/vector-js";
 import Behaviour from './js/behaviour';
 import Painter from './js/painter';
 import Controls from './components/Controls';
-import { OBSTACLE_SIZE } from './js/const';
 
 class App extends Component {
     constructor(props) {
@@ -12,8 +11,9 @@ class App extends Component {
         this.state = {
             startPt : null,
             endPt : null,
+            velocity : new Vector(0, -2.7),
             obstacles : [],
-            walls : []
+            walls : [],
         }
     }
 
@@ -56,7 +56,7 @@ class App extends Component {
 
         var vehicle = {
             position : this.state.startPt,
-            velocity : new Vector(0, -2.7)
+            velocity : this.state.velocity
         };
         var b = new Behaviour(vehicle);
         var target = this.state.endPt;
@@ -71,7 +71,24 @@ class App extends Component {
             distance = target.sub(vehicle.position).length; 
         }
 
-        this.setState({ startPt : vehicle.position });
+        this.setState({ startPt : vehicle.position, velocity : vehicle.velocity });
+    }
+
+    step_through = () => {
+
+        var vehicle = {
+            position : this.state.startPt,
+            velocity : this.state.velocity
+        };
+
+        var b = new Behaviour(vehicle);
+        var target = this.state.endPt;
+        var obstacles = this.state.obstacles;
+        var walls = this.state.walls;
+        b.avoidToSeek(target, obstacles, walls);
+        b.update();
+
+        this.setState({ startPt : vehicle.position, velocity : vehicle.velocity });
     }
 
     resizeCanvas = () => {
@@ -118,7 +135,8 @@ class App extends Component {
                     addObstacle={(obs) => this.addObstacle(obs)}
                     clearObstacles={this.clearObstacles}
                     loadEnvironment={this.loadEnvironment}
-                    seek={this.update}></Controls>
+                    seek={this.update}
+                    step_through={this.step_through}></Controls>
             </div>
         )
     };

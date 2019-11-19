@@ -62,6 +62,10 @@ export default class Palette extends Component {
         this.props.seek();
     }
 
+    step_through = () => {
+        this.props.step_through();
+    }
+
     render() {
 
         return (
@@ -72,6 +76,7 @@ export default class Palette extends Component {
                 <button className="toolbutton" onClick={this.clear_obstacles}>Clear Obstacles</button>
                 <button className="toolbutton" onClick={this.load_env}>Load Test Environment</button>
                 <button className="toolbutton" onClick={this.seek}>Seek</button>
+                <button className="toolbutton" onClick={this.step_through}>Step</button>
             </div>
         );
     }
