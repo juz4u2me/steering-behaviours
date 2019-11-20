@@ -28,14 +28,16 @@ class Behaviour {
     // Seek only when there is no obstacles
     avoidToSeek = (target, obstacles, walls) => {
         var avoid_obstacles = this.doAvoidAll(obstacles);
-        // var avoid_walls = this.doAvoidWalls(walls);
-        if(avoid_obstacles.length > 0.000001) {
-            // this.steering = this.steering.add(avoid_walls);
+        var avoid_walls = this.doAvoidWalls(walls);
+        if(avoid_obstacles.length > 0.000001 || avoid_walls.length > 0.000001) {
+            this.steering = this.steering.add(avoid_walls);
             this.steering = this.steering.add(avoid_obstacles);
             // Painter.label(this.boid.position, 'Avoid');
         }
         else {
             var steered = this.doSeek(target);
+            steered = VectorOps.limitMaxDeviation(this.boid.velocity, steered, 45);
+
             this.steering = this.steering.add(steered);
             // Painter.label(this.boid.position, 'Seek');
         }

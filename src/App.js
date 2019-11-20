@@ -87,6 +87,7 @@ class App extends Component {
         var walls = this.state.walls;
         b.avoidToSeek(target, obstacles, walls);
         b.update();
+        var distance = target.sub(vehicle.position).length;
 
         this.setState({ startPt : vehicle.position, velocity : vehicle.velocity });
     }
