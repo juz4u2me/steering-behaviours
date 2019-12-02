@@ -56,7 +56,8 @@ class App extends Component {
 
         var vehicle = {
             position : this.state.startPt,
-            velocity : this.state.velocity
+            velocity : this.state.velocity,
+            wander : 0.0
         };
         var b = new Behaviour(vehicle);
         var target = this.state.endPt;
@@ -72,6 +73,20 @@ class App extends Component {
         }
 
         this.setState({ startPt : vehicle.position, velocity : vehicle.velocity });
+    }
+
+    wander = () => {
+
+        var vehicle = {
+            position : this.state.startPt,
+            velocity : this.state.velocity,
+            wander : 0.0
+        };
+        var b = new Behaviour(vehicle);
+        for(var j = 0; j < 100; j++) {
+            b.wander_only();
+            b.update();
+        }
     }
 
     step_through = () => {
@@ -137,6 +152,7 @@ class App extends Component {
                     clearObstacles={this.clearObstacles}
                     loadEnvironment={this.loadEnvironment}
                     seek={this.update}
+                    wander={this.wander}
                     step_through={this.step_through}></Controls>
             </div>
         )

@@ -24,10 +24,30 @@ class VectorOps {
         // TODO : to evaluate which is the best/correct algorithm
         // var theta = Math.atan2(this.getY(v2) - this.getY(v1), this.getX(v2) - this.getX(v1));
         var theta = Math.atan2(this.getY(v2), this.getX(v2)) - Math.atan2(this.getY(v1), this.getX(v1));
-        // atan2( dx1*dy2-dx2*dy1 , dx1*dy1+dx2*dy2 )
-        // var theta = Math.atan2(this.getX(v1)*this.getY(v2)-this.getX(v2)*this.getY(v1), this.getX(v1)*this.getY(v1)+this.getX(v2)*this.getY(v2));
-        // var dot = v1.dot(v2);
-        // var theta = Math.acos(dot / (v1.length * v2.length));
+        // atan2( cross(v1,v2) , dot(v1,v2) )
+
+
+        return theta;
+    }
+
+    // Returns the angle between 2 unit vectors [0, pi], input vectors must be unit vectors
+    static angleBetweenUnitVectors = (v1, v2) => {
+        var dot = v1.dot(v2);
+        var theta = Math.acos(dot);
+
+        return theta;
+    }
+
+    /* Angle between the vectors as measured in a counterclockwise direction from v1 to v2. 
+     * If that angle would exceed 180 degrees, then the angle is measured in the clockwise direction but given a negative value
+     * atan2( dx1*dy2-dx2*dy1 , dx1*dy1+dx2*dy2 ), (-180, 180)
+     */
+    static directedAngleBetween = (v1, v2) => {
+        var v1x = this.getX(v1);
+        var v1y = this.getY(v1);
+        var v2x = this.getX(v2);
+        var v2y = this.getY(v2);
+        var theta = Math.atan2(v1x*v2y-v2x*v1y, v1x*v1y+v2x*v2y);
 
         return theta;
     }
@@ -76,10 +96,17 @@ class VectorOps {
 
     // Limits the maximum deviation angle of source vector to max_deviation_angle of basis vector, returns limited vector
     static limitMaxDeviation = (basis, source, max_deviation_degrees) => {
-        var deviation = this.angleBetween(source, basis);
+        if(source.length == 0) {
+            console.log('Zero length steering');
+            return source;
+        }
+        // var deviation = this.directedAngleBetween(source.normalize(), basis.normalize());
+        var deviation = this.angleBetweenUnitVectors(source.normalize(), basis.normalize());
         var max_deviation_radians = this.toRadians(max_deviation_degrees);
         var limited_steering_force = source;
-        if(deviation > max_deviation_radians) {
+        // Deviation can be clockwise or anticlockwise to the basis vector
+        console.log(VectorOps.toDegrees(deviation))
+        if(Math.abs(deviation) > max_deviation_radians) {
             var perp_component = this.perpendicularComp(source, basis.normalize());
             var cosAngle = Math.cos(max_deviation_radians);
             var perp_distance = Math.sqrt( 1-(cosAngle*cosAngle));
