@@ -39,6 +39,25 @@ class Painter {
         ctx.fill();
     }
 
+    static redraw = (point, radius, color) => {
+        var canvas = document.getElementById('nav-area');
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+
+        var rect = canvas.getBoundingClientRect();
+        var x = VectorOps.getX(point) - rect.left; // x == the location of the click in the document - the location (relative to the left) of the canvas in the document
+        var y = VectorOps.getY(point) - rect.top;
+    
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        // ctx.rect(x, y, 10, 10);
+        ctx.arc(x, y, radius, 0, 2 * Math.PI, true);
+        ctx.stroke();
+        ctx.fill();
+        ctx.restore();        
+    }
+
     static label = (point, text) => {
         var canvas = document.getElementById('nav-area');
         var ctx = canvas.getContext("2d");

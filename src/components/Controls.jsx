@@ -70,6 +70,10 @@ export default class Palette extends Component {
         this.props.step_through();
     }
 
+    stop = () => {
+        this.props.stop();
+    }
+
     render() {
 
         return (
@@ -82,6 +86,7 @@ export default class Palette extends Component {
                 <button className="toolbutton" onClick={this.seek}>Seek</button>
                 <button className="toolbutton" onClick={this.wander}>Wander</button>
                 <button className="toolbutton" onClick={this.step_through}>Step</button>
+                <button className="toolbutton" onClick={this.stop}>Stop</button>
             </div>
         );
     }

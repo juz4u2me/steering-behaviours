@@ -188,6 +188,17 @@ class Behaviour {
         this.reset();
     }
 
+    update2 = () => {
+        this.steering = this.truncate(this.steering, MAX_FORCE);
+        this.boid.velocity = this.boid.velocity.add(this.steering);
+        this.boid.velocity = this.truncate(this.boid.velocity, MAX_VELOCITY);
+        this.boid.position = this.boid.position.add(this.boid.velocity);
+        this.checkPosition();
+
+        Painter.redraw(this.boid.position, 3, '#FFA500');
+        this.reset();
+    }
+
     reset = () => {
         this.steering = new Vector(0.0, 0.0);
     }
@@ -228,6 +239,29 @@ class Behaviour {
         var y = Math.sin(value) * len;
 
         return new Vector(x, y);
+    }
+
+    checkPosition = () => {
+        var x = VectorOps.getX(this.boid.position);
+        var y = VectorOps.getY(this.boid.position);
+        var corrected_x = x;
+        var corrected_y = y;
+        var canvas = document.getElementById('nav-area');
+        if(x < 0) {
+            corrected_x = 0;
+        }
+        else if(x > canvas.width) {
+            corrected_x = canvas.width;
+        }
+
+        if(y < 0) {
+            corrected_y = 0;
+        }
+        else if(y > canvas.height) {
+            corrected_y = canvas.height;
+        }
+
+        this.boid.position = new Vector(corrected_x, corrected_y);
     }
 }
 

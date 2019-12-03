@@ -9,16 +9,22 @@ class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            startPt : null,
+            startPt : new Vector(300, 600),
             endPt : null,
             velocity : new Vector(0, -2.7),
             obstacles : [],
             walls : [],
+            wander : 0.0
         }
+        this._frameId = null;
     }
 
     componentDidMount = () => {
         this.resizeCanvas();
+    }
+      
+    componentWillUnmount = () => {
+        this.stopLoop();
     }
 
     loadEnvironment = () => {
@@ -107,6 +113,34 @@ class App extends Component {
         this.setState({ startPt : vehicle.position, velocity : vehicle.velocity });
     }
 
+    startLoop = () => {
+        if( !this._frameId ) {
+            this._frameId = window.requestAnimationFrame( this.loop );
+        }
+    }
+      
+    loop = () => {
+        // perform loop work here        
+        var vehicle = {
+            position : this.state.startPt,
+            velocity : this.state.velocity,
+            wander : this.state.wander
+        };
+        var b = new Behaviour(vehicle);
+        b.wander_only();
+        b.update2();
+        
+        this.setState({ startPt : vehicle.position, velocity : vehicle.velocity, wander : vehicle.wander });
+        // Set up next iteration of the loop
+        this._frameId = window.requestAnimationFrame(this.loop)
+    }
+    
+    stopLoop = () => {
+        window.cancelAnimationFrame( this._frameId );
+        // Note: no need to worry if the loop has already been cancelled
+        // cancelAnimationFrame() won't throw an error
+    }
+
     resizeCanvas = () => {
         var canvas = document.getElementById('nav-area');
         var displayWidth  = canvas.clientWidth;
@@ -141,6 +175,7 @@ class App extends Component {
     }
 
     render = () => {
+
         return (
             <div className='App'>
                 <div className='nav-div'>
@@ -152,8 +187,9 @@ class App extends Component {
                     clearObstacles={this.clearObstacles}
                     loadEnvironment={this.loadEnvironment}
                     seek={this.update}
-                    wander={this.wander}
-                    step_through={this.step_through}></Controls>
+                    wander={this.loop}
+                    step_through={this.step_through}
+                    stop={this.stopLoop}></Controls>
             </div>
         )
     };
