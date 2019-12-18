@@ -58,11 +58,40 @@ class Painter {
         ctx.restore();        
     }
 
+    static refresh = (points, radius) => {
+        var canvas = document.getElementById('nav-area');
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+
+        var rect = canvas.getBoundingClientRect();        
+        for(var k in points) {
+            ctx.beginPath();
+            var x = VectorOps.getX(points[k].position) - rect.left; // x == the location of the click in the document - the location (relative to the left) of the canvas in the document
+            var y = VectorOps.getY(points[k].position) - rect.top;
+            ctx.moveTo(x,y);
+            ctx.arc(x, y, radius, 0, 2 * Math.PI, true);
+            ctx.fillStyle = points[k].color;
+            ctx.fill();
+        }
+
+        ctx.restore();  
+    }
+
     static label = (point, text) => {
         var canvas = document.getElementById('nav-area');
         var ctx = canvas.getContext("2d");
         ctx.font = "5px Arial";
         ctx.fillText(text, VectorOps.getX(point)-5, VectorOps.getY(point)-5);
+    }
+
+    static getRandomColor = () => {
+        var letters = '0123456789ABCDEF';
+        var color = '#';
+        for (var i = 0; i < 6; i++) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
     }
 }
 

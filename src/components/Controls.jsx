@@ -66,6 +66,10 @@ export default class Palette extends Component {
         this.props.wander();
     }
 
+    flock = () => {
+        this.props.flock();
+    }
+
     step_through = () => {
         this.props.step_through();
     }
@@ -85,6 +89,7 @@ export default class Palette extends Component {
                 <button className="toolbutton" onClick={this.load_env}>Load Test Environment</button>
                 <button className="toolbutton" onClick={this.seek}>Seek</button>
                 <button className="toolbutton" onClick={this.wander}>Wander</button>
+                <button className="toolbutton" onClick={this.flock}>Flock</button>
                 <button className="toolbutton" onClick={this.step_through}>Step</button>
                 <button className="toolbutton" onClick={this.stop}>Stop</button>
             </div>

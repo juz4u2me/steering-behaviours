@@ -14,13 +14,15 @@ class App extends Component {
             velocity : new Vector(0, -2.7),
             obstacles : [],
             walls : [],
-            wander : 0.0
+            wander : 0.0,
+            boids : []
         }
         this._frameId = null;
     }
 
     componentDidMount = () => {
         this.resizeCanvas();
+        this.init(50);
     }
       
     componentWillUnmount = () => {
@@ -81,7 +83,7 @@ class App extends Component {
         this.setState({ startPt : vehicle.position, velocity : vehicle.velocity });
     }
 
-    wander = () => {
+    wander_only = () => {
 
         var vehicle = {
             position : this.state.startPt,
@@ -114,29 +116,49 @@ class App extends Component {
     }
 
     startLoop = () => {
-        if( !this._frameId ) {
-            this._frameId = window.requestAnimationFrame( this.loop );
+        if(!this._frameId) {
+            this._frameId = window.requestAnimationFrame(this.wander);
         }
     }
       
-    loop = () => {
-        // perform loop work here        
-        var vehicle = {
-            position : this.state.startPt,
-            velocity : this.state.velocity,
-            wander : this.state.wander
-        };
-        var b = new Boid(vehicle);
-        b.wander_only();
-        b.update2();
-        
-        this.setState({ startPt : vehicle.position, velocity : vehicle.velocity, wander : vehicle.wander });
+    wander = () => {
+        // perform loop work here
+        var boids_positions = [];
+        var boids = this.state.boids;
+        for(var i=0; i<boids.length; i++) {
+            var b = boids[i];
+            b.wander_only();
+            b.update2();
+            boids_positions.push(b.position);
+        }
+
+        Painter.refresh(boids, 5);
+        this.setState({ boids : boids });
+
         // Set up next iteration of the loop
-        this._frameId = window.requestAnimationFrame(this.loop)
+        this._frameId = window.requestAnimationFrame(this.wander)
+    }
+
+    flock = () => {
+        // perform loop work here
+        var boids_positions = [];
+        var boids = this.state.boids;
+        for(var i=0; i<boids.length; i++) {
+            var b = boids[i];
+            b.flock(boids);
+            b.update2();
+            boids_positions.push(b.position);
+        }
+
+        Painter.refresh(boids, 5);
+        this.setState({ boids : boids });
+
+        // Set up next iteration of the loop
+        this._frameId = window.requestAnimationFrame(this.flock)
     }
     
     stopLoop = () => {
-        window.cancelAnimationFrame( this._frameId );
+        window.cancelAnimationFrame(this._frameId);
         // Note: no need to worry if the loop has already been cancelled
         // cancelAnimationFrame() won't throw an error
     }
@@ -154,6 +176,19 @@ class App extends Component {
             canvas.width  = displayWidth;
             canvas.height = displayHeight;
         }
+    }
+
+    init = (n) => {
+        var boids = this.state.boids;
+        var canvas = document.getElementById('nav-area');
+        for(var i = 0; i < n; i++) {
+            var rx = Math.random()*canvas.width;
+            var ry = Math.random()*canvas.height;
+            var b = new Boid(i, rx, ry);
+            Painter.drawPoint(new Vector(rx, ry), 5, "#FFA500");
+            boids.push(b);
+        }
+        this.setState({ boids : boids });
     }
 
     addStartPt = (start) => {
@@ -187,7 +222,8 @@ class App extends Component {
                     clearObstacles={this.clearObstacles}
                     loadEnvironment={this.loadEnvironment}
                     seek={this.update}
-                    wander={this.loop}
+                    wander={this.wander}
+                    flock={this.flock}
                     step_through={this.step_through}
                     stop={this.stopLoop}></Controls>
             </div>
