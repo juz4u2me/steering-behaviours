@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import './css/App.css';
 import { Vector } from "@glazier/vector-js";
-import Behaviour from './js/behaviour';
+import Boid from './js/boid';
 import Painter from './js/painter';
 import Controls from './components/Controls';
 
@@ -65,7 +65,7 @@ class App extends Component {
             velocity : this.state.velocity,
             wander : 0.0
         };
-        var b = new Behaviour(vehicle);
+        var b = new Boid(vehicle);
         var target = this.state.endPt;
 
         var obstacles = this.state.obstacles;
@@ -88,7 +88,7 @@ class App extends Component {
             velocity : this.state.velocity,
             wander : 0.0
         };
-        var b = new Behaviour(vehicle);
+        var b = new Boid(vehicle);
         for(var j = 0; j < 100; j++) {
             b.wander_only();
             b.update();
@@ -102,7 +102,7 @@ class App extends Component {
             velocity : this.state.velocity
         };
 
-        var b = new Behaviour(vehicle);
+        var b = new Boid(vehicle);
         var target = this.state.endPt;
         var obstacles = this.state.obstacles;
         var walls = this.state.walls;
@@ -126,7 +126,7 @@ class App extends Component {
             velocity : this.state.velocity,
             wander : this.state.wander
         };
-        var b = new Behaviour(vehicle);
+        var b = new Boid(vehicle);
         b.wander_only();
         b.update2();
         

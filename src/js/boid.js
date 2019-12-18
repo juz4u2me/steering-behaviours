@@ -1,16 +1,24 @@
 import { Vector } from "@glazier/vector-js";
 import Painter from './painter';
 import Collision from './collision'
+import Proximity from './proximity'
 import VectorOps from './vectorops'
 import { SLOWING_RADIUS, MAX_VELOCITY, MAX_FORCE, MAX_AVOIDANCE, CIRCLE_DISTANCE, CIRCLE_RADIUS, ANGLE_CHANGE } from './const'
 
-class Behaviour {
+class Boid {
 
     // boid : object
     // steering : sum of all steering force acting on the object
     constructor(boid) {
         this.boid = boid;
         this.steering = new Vector(0.0, 0.0);
+
+        // this.acceleration = new Vector(0, 0);
+        // this.velocity = new Vector(Math.random(-1, 1), Math.random(-1, 1));
+        // this.position = new Vector(x, y);
+        // this.r = 3.0;
+        // this.maxspeed = 3;    // Maximum speed
+        // this.maxforce = 0.05; // Maximum steering force
     }
 
     /*
@@ -63,6 +71,26 @@ class Behaviour {
         // this.steering = VectorOps.limitMaxDeviation(this.boid.velocity, this.steering, 45);
     }
 
+    flock = () => {
+        
+    }
+    
+    blendedSteering = () => {
+        /* BlendedSteering is a combination behavior that simply sums up all the active behaviors, applies their weights, 
+         * and truncates the result before returning. There are no constraints on the blending weights; they don't have to 
+         * sum to one, for example, and rarely do. Don't think of BlendedSteering as a weighted mean, because it's not.
+         */
+    }
+
+    prioritySteering = () => {
+        /* PrioritySteering behavior iterates through the active behaviors and returns the first non zero steering. It makes 
+         * sense since certain steering behaviors only request an acceleration in particular conditions. Unlike Seek or Evade, 
+         * which always produce an acceleration, RaycastObstacleAvoidance, CollisionAvoidance, Separation, Hide and Arrive will 
+         * suggest no acceleration in many cases. But when these behaviors do suggest an acceleration, it is unwise to ignore it. 
+         * An obstacle avoidance behavior, for example, should be honored immediately to avoid the crash.
+         */
+    }
+
     /*
      *  Section : Behaviours
      */
@@ -88,6 +116,10 @@ class Behaviour {
         return this.seek(target, SLOWING_RADIUS);
     }
 
+    pursuit = (target) => {
+
+    }
+
     wander = () => {
         var center = this.boid.velocity;
         center = center.normalize();
@@ -103,10 +135,30 @@ class Behaviour {
         
         return wander_force;        
     }
+    
+    separate = () => {
+        /* The acceleration is calculated by iterating through all the neighbors, examining each one. 
+         * The vector to each agent under consideration is normalized, multiplied by a strength decreasing 
+         * according to the inverse square law in relation to distance, and accumulated.
+         */
+    }
+
+    align = () => {
+        /* The acceleration is calculated by first iterating through all the neighbors and averaging their 
+         * linear velocity vectors. This value is the desired direction, so we just subtract the owner's linear 
+         * velocity to get the steering output.
+         */
+    }
+
+    cohere = () => {
+        /* The acceleration is calculated by first iterating through all the neighbors and averaging their position 
+         * vectors. This gives us the center of mass of the neighbors, the place the agents wants to get to, so it seeks to that position.
+         */
+    }
 
     // Avoid the most threatening obstacle
     avoid = (obstacles) => {
-        var threat = this.getMostThreatening(obstacles);
+        var threat = Proximity.getMostThreatening(obstacles);
         var avoidance_force = new Vector(0.0, 0.0);
         if(threat != null) {
             var push_vector = this.boid.position.sub(threat);
@@ -115,6 +167,10 @@ class Behaviour {
         }
         
         return avoidance_force;
+    }
+
+    raycast_avoid = (obstacles) => {
+        
     }
 
     // Avoid all obstacles within range
@@ -193,7 +249,7 @@ class Behaviour {
         this.boid.velocity = this.boid.velocity.add(this.steering);
         this.boid.velocity = this.truncate(this.boid.velocity, MAX_VELOCITY);
         this.boid.position = this.boid.position.add(this.boid.velocity);
-        this.checkPosition();
+        this.wrapAround();
 
         Painter.redraw(this.boid.position, 3, '#FFA500');
         this.reset();
@@ -206,21 +262,6 @@ class Behaviour {
     /*
      *  Section : Utility functions
      */
-
-    getMostThreatening = (obstacles) => {
-        var position = this.boid.position;
-        var mostThreatening = null;        
-        for(var i=0; i<obstacles.length; i++) {
-            var obstacle = obstacles[i];
-            var willIntersect = Collision.willIntersect(this.boid, obstacle);
-
-            if(willIntersect && (mostThreatening == null || VectorOps.distance(position, obstacle) < VectorOps.distance(position, mostThreatening))) {
-                mostThreatening = obstacle;
-            }
-        }
-
-        return mostThreatening;
-    }
 
     truncate = (v, max) => {
         var scale = max / v.length;
@@ -241,28 +282,28 @@ class Behaviour {
         return new Vector(x, y);
     }
 
-    checkPosition = () => {
+    wrapAround = () => {
         var x = VectorOps.getX(this.boid.position);
         var y = VectorOps.getY(this.boid.position);
         var corrected_x = x;
         var corrected_y = y;
         var canvas = document.getElementById('nav-area');
         if(x < 0) {
-            corrected_x = 0;
+            corrected_x = canvas.width;
         }
         else if(x > canvas.width) {
-            corrected_x = canvas.width;
+            corrected_x = 0;
         }
 
         if(y < 0) {
-            corrected_y = 0;
+            corrected_y = canvas.height;
         }
         else if(y > canvas.height) {
-            corrected_y = canvas.height;
+            corrected_y = 0;
         }
 
         this.boid.position = new Vector(corrected_x, corrected_y);
     }
 }
 
-export default Behaviour;
+export default Boid;
