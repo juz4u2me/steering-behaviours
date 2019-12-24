@@ -4,6 +4,7 @@ import { Vector } from "@glazier/vector-js";
 import Boid from './js/boid';
 import Painter from './js/painter';
 import Controls from './components/Controls';
+import { EPSILON } from './js/const';
 
 class App extends Component {
     constructor(props) {
@@ -22,7 +23,7 @@ class App extends Component {
 
     componentDidMount = () => {
         this.resizeCanvas();
-        this.init(50);
+        this.init(200);
     }
       
     componentWillUnmount = () => {
@@ -74,8 +75,8 @@ class App extends Component {
         var walls = this.state.walls;
 
         var distance = target.sub(vehicle.position).length;
-        while(distance > 0.000001) {
-            b.avoidToSeek(target, obstacles, walls);
+        while(distance > EPSILON) {
+            b.avoid_and_seek(target, obstacles, walls);
             b.update();
             distance = target.sub(vehicle.position).length; 
         }
@@ -108,7 +109,7 @@ class App extends Component {
         var target = this.state.endPt;
         var obstacles = this.state.obstacles;
         var walls = this.state.walls;
-        b.avoidToSeek(target, obstacles, walls);
+        b.avoid_and_seek(target, obstacles, walls);
         b.update();
         var distance = target.sub(vehicle.position).length;
 
@@ -127,12 +128,12 @@ class App extends Component {
         var boids = this.state.boids;
         for(var i=0; i<boids.length; i++) {
             var b = boids[i];
-            b.wander_only();
+            b.wander_only(boids);
             b.update2();
             boids_positions.push(b.position);
         }
 
-        Painter.refresh(boids, 5);
+        Painter.refresh(boids, 3);
         this.setState({ boids : boids });
 
         // Set up next iteration of the loop
@@ -150,7 +151,7 @@ class App extends Component {
             boids_positions.push(b.position);
         }
 
-        Painter.refresh(boids, 5);
+        Painter.refresh(boids, 3);
         this.setState({ boids : boids });
 
         // Set up next iteration of the loop
@@ -185,7 +186,7 @@ class App extends Component {
             var rx = Math.random()*canvas.width;
             var ry = Math.random()*canvas.height;
             var b = new Boid(i, rx, ry);
-            Painter.drawPoint(new Vector(rx, ry), 5, "#FFA500");
+            Painter.drawPoint(new Vector(rx, ry), 3, b.color);
             boids.push(b);
         }
         this.setState({ boids : boids });

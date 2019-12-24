@@ -1,5 +1,5 @@
 import { Vector } from "@glazier/vector-js";
-import VectorOps from './vectorops'
+import VectorOps from './vectorops';
 
 class Painter {
 
@@ -72,6 +72,7 @@ class Painter {
             ctx.moveTo(x,y);
             ctx.arc(x, y, radius, 0, 2 * Math.PI, true);
             ctx.fillStyle = points[k].color;
+            // ctx.fillText(points[k].id, VectorOps.getX(points[k].position), VectorOps.getY(points[k].position));
             ctx.fill();
         }
 

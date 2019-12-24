@@ -1,6 +1,5 @@
 import VectorOps from './vectorops';
-import Painter from './painter';
-import { BUFFER, OBSTACLE_SIZE, MIN_COLLISION_TIME, VEHICLE_SIZE } from './const'
+import { BUFFER, OBSTACLE_SIZE, MIN_COLLISION_TIME, VEHICLE_SIZE } from './const';
 
 class Collision {
 

@@ -1,9 +1,9 @@
 import { Vector } from "@glazier/vector-js";
 import Painter from './painter';
-import Collision from './collision'
-import Proximity from './proximity'
-import VectorOps from './vectorops'
-import { SLOWING_RADIUS, MAX_VELOCITY, MAX_FORCE, MAX_AVOIDANCE, CIRCLE_DISTANCE, CIRCLE_RADIUS, ANGLE_CHANGE } from './const'
+import Collision from './collision';
+import Proximity from './proximity';
+import VectorOps from './vectorops';
+import { SLOWING_RADIUS, MAX_VELOCITY, MAX_FORCE, MAX_AVOIDANCE, CIRCLE_DISTANCE, CIRCLE_RADIUS, ANGLE_CHANGE, EPSILON } from './const';
 
 class Boid {
 
@@ -20,7 +20,13 @@ class Boid {
     constructor(i, x, y) {
         this.id = i;
         this.acceleration = new Vector(0, 0);
-        this.velocity = new Vector(Math.random(-1, 1), Math.random(-1, 1));
+        var rx = Math.floor(Math.random()*99) + 1; // this will get a number between 1 and 99;
+        rx *= Math.floor(Math.random()*2) == 1 ? 1 : -1; // this will add minus sign in 50% of cases
+
+        var ry = Math.floor(Math.random()*99) + 1; // this will get a number between 1 and 99;
+        ry *= Math.floor(Math.random()*2) == 1 ? 1 : -1; // this will add minus sign in 50% of cases
+
+        this.velocity = new Vector(rx, ry);
         this.position = new Vector(x, y);
         this.r = 3.0;
         this.maxspeed = 3;    // Maximum speed
@@ -34,45 +40,45 @@ class Boid {
      */
 
     seek_only = (target) => {        
-        var steered = this.arrive(target);
-        this.acceleration = this.acceleration.add(steered);
+        var seeking = this.arrive(target);
+        this.applyForce(seeking);
     }
 
-    wander_only = () => {
-        var steered = this.wander();
-        this.acceleration = this.acceleration.add(steered);
+    wander_only = (boids) => {
+        var wandering = this.wander();
+        var separation = this.separate(boids);
+        this.applyForce(wandering);
+        this.applyForce(separation);
     }
 
     avoid_only = (obstacles, walls) => {
-        var avoided = this.avoidAll(obstacles);
-        this.acceleration = this.acceleration.add(avoided);
-        var avoided_too = this.avoidWalls(walls);
-        this.acceleration = this.acceleration.add(avoided_too);
+        var avoiding = this.avoidAll(obstacles);
+        var avoiding_walls = this.avoidWalls(walls);
+        this.applyForce(avoiding);
+        this.applyForce(avoiding_walls);
     }
     
     // Seek only when there is no obstacles
-    avoidToSeek = (target, obstacles, walls) => {
+    avoid_and_seek = (target, obstacles, walls) => {
         var avoid_obstacles = this.avoidAll(obstacles);
         var avoid_walls = this.avoidWalls(walls);
-        if(avoid_obstacles.length > 0.000001 || avoid_walls.length > 0.000001) {
+        if(avoid_obstacles.length > EPSILON || avoid_walls.length > EPSILON) {
             var total_avoidance = avoid_walls.add(avoid_obstacles);
             total_avoidance = VectorOps.limitMaxDeviation(this.boid.velocity, total_avoidance, 45);
-            this.acceleration = this.acceleration.add(total_avoidance);
+            this.applyForce(total_avoidance);
             // this.acceleration = this.acceleration.add(avoid_obstacles);
-
-            // Painter.label(this.position, 'Avoid');
         }
         else {
-            var steered = this.arrive(target);
-            console.log('acceleration by: '+steered);
+            var arrival = this.arrive(target);
+            console.log('acceleration by: '+arrival);
             console.log('Current V: '+this.velocity);
             // steered = VectorOps.limitMaxDeviation(this.velocity, steered, 45);
             var distance = target.sub(this.position).length;
             if(distance < 1) {
                 console.log('Distance: '+distance);
             }
-            console.log('acceleration adjusted by: '+steered);
-            this.acceleration = this.acceleration.add(steered);
+            console.log('acceleration adjusted by: '+arrival);
+            this.applyForce(arrival);
             console.log('Final acceleration: '+this.acceleration);
             // Painter.label(this.position, 'Seek');
         }        
@@ -80,14 +86,15 @@ class Boid {
     }
 
     flock = (boids) => {
-        var steered = this.wander();
-        this.acceleration = this.acceleration.add(steered);
-        var steered2 = this.separate(boids);
-        this.acceleration = this.acceleration.add(steered2);
-        var steered3 = this.align(boids);
-        this.acceleration = this.acceleration.add(steered3);
-        var steered4 = this.cohere(boids);
-        this.acceleration = this.acceleration.add(steered4);
+        var separation = this.separate(boids);        
+        var alignment = this.align(boids);        
+        var cohesion = this.cohere(boids);
+        separation = separation.mul(1.5);
+        alignment = alignment.mul(1.0);
+        cohesion = cohesion.mul(1.0);
+        this.applyForce(separation);
+        this.applyForce(alignment);
+        this.applyForce(cohesion);
     }
     
     blendedSteering = () => {
@@ -151,29 +158,38 @@ class Boid {
         return wander_force;        
     }
     
+    /* The acceleration is calculated by iterating through all the neighbors, examining each one. 
+     * The vector to each agent under consideration is normalized, multiplied by a strength decreasing 
+     * according to the inverse square law in relation to distance, and accumulated.
+     */
     separate = (boids) => {
-        /* The acceleration is calculated by iterating through all the neighbors, examining each one. 
-         * The vector to each agent under consideration is normalized, multiplied by a strength decreasing 
-         * according to the inverse square law in relation to distance, and accumulated.
-         */
+        
         let desiredseparation = 25.0;
         let steer = new Vector(0, 0);
         let count = 0;
         // For every boid in the system, check if it's too close
         for(let i=0; i<boids.length; i++) {
-            let d = VectorOps.distance(this.position, boids[i].position);
-            // If the distance is greater than 0 and less than an arbitrary amount (0 when you are yourself)
-            if ((d > 0) && (d < desiredseparation)) {
-                // Calculate vector pointing away from neighbor
-                let diff = this.position.sub(boids[i].position);
-                diff.normalize();
-                diff.mul(1/d);        // Weight by distance
-                steer.add(diff);
-                count++;            // Keep track of how many
+            if(this.id != boids[i].id) {
+                let d = VectorOps.distance(this.position, boids[i].position);
+                // If the distance is greater than 0 and less than an arbitrary amount (0 when you are yourself)
+                if ((d > 0) && (d < desiredseparation)) {
+                    // Calculate vector pointing away from neighbor
+                    let diff = this.position.sub(boids[i].position);
+                    diff.normalize();
+                    diff.mul(1/d);        // Weight by distance
+                    steer.add(diff);
+                    count++;            // Keep track of how many
+                    // console.log(this.id+' colliding with: '+boids[i].id);
+                    // if(d<3.0) {
+                    //     this.color = '#FF0000';
+                    // }
+                }
             }
+
         }
         // Average -- divide by how many
         if (count > 0) {
+            console.log('Collision imminent: '+count);
             steer.mul(1/count);
         }
 
@@ -183,16 +199,16 @@ class Boid {
             steer.normalize();
             steer.mul(this.maxspeed);
             steer.sub(this.velocity);
-            // steer.limit(this.maxforce);
+            steer = this.truncate(steer, this.maxforce);
         }
         return steer;
     }
 
+    /* The acceleration is calculated by first iterating through all the neighbors and averaging their 
+     * linear velocity vectors. This value is the desired direction, so we just subtract the owner's linear 
+     * velocity to get the steering output.
+     */
     align = (boids) => {
-        /* The acceleration is calculated by first iterating through all the neighbors and averaging their 
-         * linear velocity vectors. This value is the desired direction, so we just subtract the owner's linear 
-         * velocity to get the steering output.
-         */
         let neighbordist = 50;
         let sum = new Vector(0,0);
         let count = 0;
@@ -209,17 +225,17 @@ class Boid {
             sum.normalize();
             sum.mul(this.maxspeed);
             let steer = sum.sub(this.velocity);
-            // steer.limit(this.maxforce);
+            steer = this.truncate(steer, this.maxforce);
             return steer;
         } else {
             return new Vector(0, 0);
         }
     }
 
-    cohere = (boids) => {
-        /* The acceleration is calculated by first iterating through all the neighbors and averaging their position 
-         * vectors. This gives us the center of mass of the neighbors, the place the agents wants to get to, so it seeks to that position.
-         */
+    /* The acceleration is calculated by first iterating through all the neighbors and averaging their position 
+     * vectors. This gives us the center of mass of the neighbors, the place the agents wants to get to, so it seeks to that position.
+     */
+    cohere = (boids) => {        
         let neighbordist = 50;
         let sum = new Vector(0, 0);   // Start with empty vector to accumulate all locations
         let count = 0;
@@ -343,6 +359,10 @@ class Boid {
     /*
      *  Section : Utility functions
      */
+
+    applyForce = (f) => {
+        this.acceleration = this.acceleration.add(f);
+    }
 
     truncate = (v, max) => {
         var scale = max / v.length;

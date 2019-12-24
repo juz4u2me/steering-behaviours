@@ -2,7 +2,7 @@ import React, {Component} from "react";
 import '../css/controls.css';
 import { Vector } from "@glazier/vector-js";
 import Painter from '../js/painter';
-import { OBSTACLE_SIZE } from '../js/const'
+import { OBSTACLE_SIZE } from '../js/const';
 
 export default class Palette extends Component {
 

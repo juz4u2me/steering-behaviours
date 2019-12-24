@@ -1,5 +1,5 @@
 import VectorOps from './vectorops';
-import Collision from './collision'
+import Collision from './collision';
 
 class Proximity {
 
