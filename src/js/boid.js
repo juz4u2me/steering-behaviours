@@ -32,7 +32,8 @@ class Boid {
         this.maxspeed = 3;    // Maximum speed
         this.maxforce = 0.05; // Maximum acceleration force
         this.wander_angle = 0.0;
-        this.color = Painter.getRandomColor();
+        // this.color = Painter.getRandomColor();
+        this.color = '#000000';
     }
 
     /*
@@ -46,9 +47,9 @@ class Boid {
 
     wander_only = (boids) => {
         var wandering = this.wander();
-        var separation = this.separate(boids);
+        // var separation = this.separate(boids);
         this.applyForce(wandering);
-        this.applyForce(separation);
+        // this.applyForce(separation);
     }
 
     avoid_only = (obstacles, walls) => {
@@ -89,12 +90,14 @@ class Boid {
         var separation = this.separate(boids);        
         var alignment = this.align(boids);        
         var cohesion = this.cohere(boids);
-        separation = separation.mul(1.5);
+        separation = separation.mul(2.5);
         alignment = alignment.mul(1.0);
         cohesion = cohesion.mul(1.0);
         this.applyForce(separation);
         this.applyForce(alignment);
-        this.applyForce(cohesion);
+        // this.applyForce(cohesion);
+
+        // this.update2();
     }
     
     blendedSteering = () => {
@@ -169,36 +172,29 @@ class Boid {
         let count = 0;
         // For every boid in the system, check if it's too close
         for(let i=0; i<boids.length; i++) {
-            if(this.id != boids[i].id) {
-                let d = VectorOps.distance(this.position, boids[i].position);
-                // If the distance is greater than 0 and less than an arbitrary amount (0 when you are yourself)
-                if ((d > 0) && (d < desiredseparation)) {
-                    // Calculate vector pointing away from neighbor
-                    let diff = this.position.sub(boids[i].position);
-                    diff.normalize();
-                    diff.mul(1/d);        // Weight by distance
-                    steer.add(diff);
-                    count++;            // Keep track of how many
-                    // console.log(this.id+' colliding with: '+boids[i].id);
-                    // if(d<3.0) {
-                    //     this.color = '#FF0000';
-                    // }
-                }
+            let d = VectorOps.distance(this.position, boids[i].position);
+            // If the distance is greater than 0 and less than an arbitrary amount (0 when you are yourself)
+            if ((d > 0) && (d < desiredseparation)) {
+                // Calculate vector pointing away from neighbor
+                let diff = this.position.sub(boids[i].position);
+                diff = diff.normalize();
+                diff = diff.mul(1/d);        // Weight by distance
+                steer = steer.add(diff);
+                count++;            // Keep track of how many
             }
-
         }
         // Average -- divide by how many
         if (count > 0) {
-            console.log('Collision imminent: '+count);
-            steer.mul(1/count);
+            // console.log('Collision imminent: '+count);
+            steer = steer.mul(1/count);
         }
 
         // As long as the vector is greater than 0
         if (steer.length > 0) {
             // Implement Reynolds: Steering = Desired - Velocity
-            steer.normalize();
-            steer.mul(this.maxspeed);
-            steer.sub(this.velocity);
+            steer = steer.normalize();
+            steer = steer.mul(this.maxspeed);
+            steer = steer.sub(this.velocity);
             steer = this.truncate(steer, this.maxforce);
         }
         return steer;
@@ -215,15 +211,15 @@ class Boid {
         for (let i = 0; i < boids.length; i++) {
             let d = VectorOps.distance(this.position, boids[i].position);
             if ((d > 0) && (d < neighbordist)) {
-                sum.add(boids[i].velocity);
+                sum = sum.add(boids[i].velocity);
                 count++;
             }
         }
 
         if (count > 0) {
-            sum.mul(1/count);
-            sum.normalize();
-            sum.mul(this.maxspeed);
+            sum = sum.mul(1/count);
+            sum = sum.normalize();
+            sum = sum.mul(this.maxspeed);
             let steer = sum.sub(this.velocity);
             steer = this.truncate(steer, this.maxforce);
             return steer;
@@ -242,12 +238,12 @@ class Boid {
         for (let i = 0; i < boids.length; i++) {
             let d = VectorOps.distance(this.position, boids[i].position);
             if ((d > 0) && (d < neighbordist)) {
-                sum.add(boids[i].position); // Add location
+                sum = sum.add(boids[i].position); // Add location
                 count++;
             }
         }
         if (count > 0) {
-            sum.mul(1/count);
+            sum = sum.mul(1/count);
             return this.seek(sum);  // Steer towards the location
         } else {
             return new Vector(0, 0);
@@ -343,11 +339,10 @@ class Boid {
     }
 
     update2 = () => {
-        this.acceleration = this.truncate(this.acceleration, MAX_FORCE);
+        // this.acceleration = this.truncate(this.acceleration, MAX_FORCE);
         this.velocity = this.velocity.add(this.acceleration);
         this.velocity = this.truncate(this.velocity, MAX_VELOCITY);
-        this.position = this.position.add(this.velocity);
-        this.wrapAround();
+        this.position = this.position.add(this.velocity);        
        
         this.reset();
     }
@@ -371,6 +366,19 @@ class Boid {
         return v.mul(scale);
     }
 
+    limit = (v, max) => {
+        var x = VectorOps.getX(v);
+        var y = VectorOps.getY(v);
+        var magSq = x*x+y*y;
+        // const mSq = this.magSq();
+        if(magSq > max * max) {
+            return v.mul(1/Math.sqrt(magSq)) //normalize it
+            .mul(max);
+        }
+
+        return v;
+    }
+
     getAcceleration = () => {
         return this.acceleration;
     }
@@ -383,24 +391,42 @@ class Boid {
         return new Vector(x, y);
     }
 
-    wrapAround = () => {
+    /*
+     * Bounds the global position so that it will not exceed canvas bounds
+     */
+    bound = () => {
         var x = VectorOps.getX(this.position);
         var y = VectorOps.getY(this.position);
         var corrected_x = x;
         var corrected_y = y;
         var canvas = document.getElementById('nav-area');
-        if(x < 0) {
-            corrected_x = canvas.width;
+        
+        var changed = false;
+        if(x < -canvas.width/2) {
+            console.log('Minimum X bound hit '+this.id);
+            corrected_x = x + canvas.width;
+            changed = true;
         }
-        else if(x > canvas.width) {
-            corrected_x = 0;
+        else if(x > canvas.width/2) {
+            console.log('Maximum X bound hit '+this.id);
+            corrected_x = x - canvas.width;
+            changed = true;
         }
 
-        if(y < 0) {
-            corrected_y = canvas.height;
+        if(y < -canvas.height/2) {
+            console.log('Minimum Y bound hit '+this.id);
+            corrected_y = y + canvas.height;
+            changed = true;
         }
-        else if(y > canvas.height) {
-            corrected_y = 0;
+        else if(y > canvas.height/2) {
+            console.log('Maximum Y bound hit '+this.id);
+            corrected_y = y - canvas.height;
+            changed = true;
+        }
+
+        if(changed) {
+            console.log(this.id+' before: '+x, y);
+            console.log(this.id+' after: '+corrected_x, corrected_y);
         }
 
         this.position = new Vector(corrected_x, corrected_y);

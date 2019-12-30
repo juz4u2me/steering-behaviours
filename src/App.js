@@ -5,6 +5,7 @@ import Boid from './js/boid';
 import Painter from './js/painter';
 import Controls from './components/Controls';
 import { EPSILON } from './js/const';
+import VectorOps from './js/vectorops';
 
 class App extends Component {
     constructor(props) {
@@ -23,7 +24,8 @@ class App extends Component {
 
     componentDidMount = () => {
         this.resizeCanvas();
-        this.init(200);
+        // this.init(100);
+        this.global_init(100);
     }
       
     componentWillUnmount = () => {
@@ -124,13 +126,12 @@ class App extends Component {
       
     wander = () => {
         // perform loop work here
-        var boids_positions = [];
         var boids = this.state.boids;
         for(var i=0; i<boids.length; i++) {
             var b = boids[i];
-            b.wander_only(boids);
+            b.wander_only(boids);            
             b.update2();
-            boids_positions.push(b.position);
+            b.bound();
         }
 
         Painter.refresh(boids, 3);
@@ -142,20 +143,27 @@ class App extends Component {
 
     flock = () => {
         // perform loop work here
-        var boids_positions = [];
         var boids = this.state.boids;
         for(var i=0; i<boids.length; i++) {
             var b = boids[i];
-            b.flock(boids);
+            // var x = boids[0];
+            // console.log(i, x.position);
+            // TODO: investigate if the next boid makes use of the latest neighbours
+            // console.log('Before: '+b.position);
+            b.flock(boids);            
             b.update2();
-            boids_positions.push(b.position);
+            b.bound();
+            // b.wrapAround(i);
+            // console.log('After: '+b.position);
         }
 
         Painter.refresh(boids, 3);
-        this.setState({ boids : boids });
+        this.setState({ boids : boids }, this.reanimate(this.flock));
+    }
 
+    reanimate = (fn) => {
         // Set up next iteration of the loop
-        this._frameId = window.requestAnimationFrame(this.flock)
+        this._frameId = window.requestAnimationFrame(fn);
     }
     
     stopLoop = () => {
@@ -177,16 +185,45 @@ class App extends Component {
             canvas.width  = displayWidth;
             canvas.height = displayHeight;
         }
+
+        // var ctx = canvas.getContext("2d");   
+        // ctx.addGrid();
     }
 
     init = (n) => {
+        console.log('init boids');
         var boids = this.state.boids;
+        var test_boid = new Boid(1000, 0, -500);
+        console.log(VectorOps.getX(test_boid.position), VectorOps.getY(test_boid.position));
+        test_boid.wrapAround(1000);
+        console.log(VectorOps.getX(test_boid.position), VectorOps.getY(test_boid.position));
+        Painter.drawPoint(new Vector(VectorOps.getX(test_boid.position), VectorOps.getY(test_boid.position)), 3, test_boid.color);
+        boids.push(test_boid);
+
         var canvas = document.getElementById('nav-area');
+        console.log(canvas.width, canvas.height);
         for(var i = 0; i < n; i++) {
-            var rx = Math.random()*canvas.width;
-            var ry = Math.random()*canvas.height;
+            // var rx = Math.random()*canvas.width;
+            // var ry = Math.random()*canvas.height;
+            var rx = canvas.width/2;
+            var ry = canvas.height/2;
             var b = new Boid(i, rx, ry);
             Painter.drawPoint(new Vector(rx, ry), 3, b.color);
+            boids.push(b);
+        }
+        this.setState({ boids : boids });
+    }
+
+    global_init = (n) => {
+        var boids = this.state.boids;
+        var canvas = document.getElementById('nav-area');
+        console.log('Bounds: '+-canvas.width/2, canvas.width/2, -canvas.height/2, canvas.height/2)
+        for(var i = 0; i < n; i++) {
+            var pt = Painter.generateXY(canvas.width, canvas.height);
+            var b = new Boid(i, VectorOps.getX(pt), VectorOps.getY(pt));
+            var canvas_pt = Painter.global2local(pt);
+            Painter.label(canvas_pt, VectorOps.getX(pt)+' '+VectorOps.getY(pt));
+            Painter.drawPoint(canvas_pt, 3, b.color);
             boids.push(b);
         }
         this.setState({ boids : boids });
