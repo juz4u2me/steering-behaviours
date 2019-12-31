@@ -17,23 +17,17 @@ class Boid {
     //     this.boid.velocity = new Vector(Math.random(-1, 1), Math.random(-1, 1));
     // }
 
-    constructor(i, x, y) {
+    constructor(i, v) {
         this.id = i;
         this.acceleration = new Vector(0, 0);
-        var rx = Math.floor(Math.random()*99) + 1; // this will get a number between 1 and 99;
-        rx *= Math.floor(Math.random()*2) == 1 ? 1 : -1; // this will add minus sign in 50% of cases
-
-        var ry = Math.floor(Math.random()*99) + 1; // this will get a number between 1 and 99;
-        ry *= Math.floor(Math.random()*2) == 1 ? 1 : -1; // this will add minus sign in 50% of cases
-
-        this.velocity = new Vector(rx, ry);
-        this.position = new Vector(x, y);
+        this.velocity = Boid.generateXY(99, 99);
+        this.position = v
         this.r = 3.0;
         this.maxspeed = 3;    // Maximum speed
         this.maxforce = 0.05; // Maximum acceleration force
         this.wander_angle = 0.0;
         // this.color = Painter.getRandomColor();
-        this.color = '#000000';
+        this.color = 'black';
     }
 
     /*
@@ -90,14 +84,12 @@ class Boid {
         var separation = this.separate(boids);        
         var alignment = this.align(boids);        
         var cohesion = this.cohere(boids);
-        separation = separation.mul(2.5);
+        separation = separation.mul(1.5);
         alignment = alignment.mul(1.0);
-        cohesion = cohesion.mul(1.0);
+        cohesion = cohesion.mul(0.02);
         this.applyForce(separation);
         this.applyForce(alignment);
-        // this.applyForce(cohesion);
-
-        // this.update2();
+        this.applyForce(cohesion);
     }
     
     blendedSteering = () => {
@@ -127,9 +119,9 @@ class Boid {
 
         var desired = desired.normalize();
         if(distance < radius) {
-            desired = desired.mul(MAX_VELOCITY * distance / SLOWING_RADIUS);
+            desired = desired.mul(this.maxspeed * distance / SLOWING_RADIUS);
         } else {
-            desired = desired.mul(MAX_VELOCITY);
+            desired = desired.mul(this.maxspeed);
         }
 
         var steering_force = desired.sub(this.velocity);        
@@ -176,24 +168,21 @@ class Boid {
             // If the distance is greater than 0 and less than an arbitrary amount (0 when you are yourself)
             if ((d > 0) && (d < desiredseparation)) {
                 // Calculate vector pointing away from neighbor
-                let diff = this.position.sub(boids[i].position);
-                diff = diff.normalize();
-                diff = diff.mul(1/d);        // Weight by distance
+                let diff = this.position.sub(boids[i].position);     
+                diff = this.norm_scale(diff, 1/d); // Weight by inverse distance
                 steer = steer.add(diff);
                 count++;            // Keep track of how many
             }
         }
         // Average -- divide by how many
         if (count > 0) {
-            // console.log('Collision imminent: '+count);
             steer = steer.mul(1/count);
         }
 
         // As long as the vector is greater than 0
         if (steer.length > 0) {
             // Implement Reynolds: Steering = Desired - Velocity
-            steer = steer.normalize();
-            steer = steer.mul(this.maxspeed);
+            steer = this.norm_scale(steer, this.maxspeed);
             steer = steer.sub(this.velocity);
             steer = this.truncate(steer, this.maxforce);
         }
@@ -218,8 +207,7 @@ class Boid {
 
         if (count > 0) {
             sum = sum.mul(1/count);
-            sum = sum.normalize();
-            sum = sum.mul(this.maxspeed);
+            sum = this.norm_scale(sum, this.maxspeed);
             let steer = sum.sub(this.velocity);
             steer = this.truncate(steer, this.maxforce);
             return steer;
@@ -231,7 +219,7 @@ class Boid {
     /* The acceleration is calculated by first iterating through all the neighbors and averaging their position 
      * vectors. This gives us the center of mass of the neighbors, the place the agents wants to get to, so it seeks to that position.
      */
-    cohere = (boids) => {        
+    cohere = (boids) => {
         let neighbordist = 50;
         let sum = new Vector(0, 0);   // Start with empty vector to accumulate all locations
         let count = 0;
@@ -379,6 +367,10 @@ class Boid {
         return v;
     }
 
+    norm_scale = (v, factor) => {
+        return v.normalize().mul(factor);
+    }
+
     getAcceleration = () => {
         return this.acceleration;
     }
@@ -430,6 +422,16 @@ class Boid {
         }
 
         this.position = new Vector(corrected_x, corrected_y);
+    }
+
+    static generateXY = (x, y) => {
+        var rx = Math.floor(Math.random()*x); // this will get a number between 0 and x;
+        rx *= Math.floor(Math.random()*2) == 1 ? 1 : -1; // this will add minus sign in 50% of cases
+
+        var ry = Math.floor(Math.random()*y); // this will get a number between 0 and y;
+        ry *= Math.floor(Math.random()*2) == 1 ? 1 : -1; // this will add minus sign in 50% of cases
+        
+        return new Vector(rx, ry);
     }
 }
 

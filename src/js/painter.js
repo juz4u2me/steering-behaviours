@@ -227,16 +227,6 @@ class Painter {
         return new Vector(rx, ry);
     }
 
-    static generateXY = (width, height) => {
-        var rx = Math.floor(Math.random()*width/2); // this will get a number between 0 and width/2;
-        rx *= Math.floor(Math.random()*2) == 1 ? 1 : -1; // this will add minus sign in 50% of cases
-
-        var ry = Math.floor(Math.random()*height/2); // this will get a number between 0 and height/2;
-        ry *= Math.floor(Math.random()*2) == 1 ? 1 : -1; // this will add minus sign in 50% of cases
-        
-        return new Vector(rx, ry);
-    }
-
     /*
      * Converts local (canvas) coordinates to global (boid space) coordinates
      */
