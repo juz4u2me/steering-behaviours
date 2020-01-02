@@ -16,11 +16,11 @@ CanvasRenderingContext2D.prototype.addGrid = function (delta, color, fontParams)
     this.strokeStyle = color;
     this.font = fontParams;
     this.beginPath();
-    for (var i = 0; i * delta < oldWidth; i ++) {
+    for (let i = 0; i * delta < oldWidth; i ++) {
         this.moveTo (i * delta, 0);
         this.lineTo (i * delta, oldHeight);
     }
-    for (var j = 0; j * delta < oldHeight; j ++) {
+    for (let j = 0; j * delta < oldHeight; j ++) {
         this.moveTo (0, j * delta);
         this.lineTo (oldWidth, j * delta);
     }      
@@ -41,12 +41,12 @@ CanvasRenderingContext2D.prototype.addGrid = function (delta, color, fontParams)
     this.lineWidth = 0.3;
     // 1. writing the numbers to the x axis
     var textY = oldHeight + Math.floor(delta/2); // y-coordinate for the number strings
-    for (var i = 0; i * delta <= oldWidth; i ++) {
+    for (let i = 0; i * delta <= oldWidth; i ++) {
         this.strokeText (i * delta, i * delta, textY);        
     }
     // 2. writing the numbers to the y axis
     var textX = oldWidth + 5; // x-coordinate for the number strings
-    for (var j = 0; j * delta <= oldHeight; j ++) {
+    for (let j = 0; j * delta <= oldHeight; j ++) {
         this.strokeText (j * delta, textX, j * delta);
     }
 }; 
@@ -92,16 +92,19 @@ class Painter {
     static drawTriangle = (x, y, d) => {
         var canvas = document.getElementById('nav-area');
         var ctx = canvas.getContext("2d");
+        ctx.save();
         ctx.translate(x, y);
         ctx.rotate(d*Math.PI/180);
-        ctx.scale(10, 10);
+        ctx.scale(1, 1);
         ctx.beginPath();
         ctx.moveTo(0,0);      // starting point at the top of the triangle
-        ctx.lineTo(1,0);
-        ctx.lineTo(0,-3);     // line to right bottom corner
-        ctx.lineTo(-1,0);      // line to left bottom corner
+        ctx.lineTo(3,0);
+        ctx.lineTo(0,-9);     // line to right bottom corner
+        ctx.lineTo(-3,0);      // line to left bottom corner
         ctx.closePath();         // closes the shape with a line from the left bottom to the initial top point        
         ctx.stroke();            // draw the lines
+        ctx.fill();
+        ctx.restore();
     }
 
     static redraw = (point, radius, color) => {
@@ -130,14 +133,18 @@ class Painter {
         ctx.save();
         // ctx.addGrid();
         // this.drawTriangle(500, 500, 90);
+        // this.drawTriangle(600, 600, 45);
         var rect = canvas.getBoundingClientRect();        
         for(var k in points) {
-            // this.gradient_agent(ctx, rect, points[k], radius);            
-            // this.pointer(rect, points[k]);
+            // this.gradient_agent(ctx, rect, points[k], radius);
             var p = points[k].position;
-            var c = points[k].color;
+            var v = points[k].velocity;
             var pt = Painter.global2local(p);
-            this.re_point(ctx, pt, 3, c);
+            this.pointer(pt, v);
+            // var p = points[k].position;
+            // var c = points[k].color;
+            // var pt = Painter.global2local(p);
+            // this.re_point(ctx, pt, 3, c);
             // this.label(pt, VectorOps.getX(points[k].velocity)+','+VectorOps.getY(points[k].velocity))
         }
 
@@ -163,10 +170,13 @@ class Painter {
         ctx.fill();
     }
 
-    static pointer = (rect, point) => {
-        var x = VectorOps.getX(point.position) - rect.left; // x == the location of the click in the document - the location (relative to the left) of the canvas in the document
-        var y = VectorOps.getY(point.position) - rect.top;
-        this.drawTriangle(x, y, 90);
+    static pointer = (point, velocity) => {
+        var x = VectorOps.getX(point);
+        var y = VectorOps.getY(point);
+        var vx = VectorOps.getX(velocity);
+        var vy = VectorOps.getY(velocity);
+        var heading = VectorOps.toDegrees(Math.atan2(vx, vy));
+        this.drawTriangle(x, y, heading);
     }
 
     static agent = (ctx, rect, point, radius) => {

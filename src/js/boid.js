@@ -114,17 +114,17 @@ class Boid {
     
     // Seek & Arrival, boid seeking/moving towards target at max speed and slows down upon arrival
     seek = (target, radius = 0) => {
-        var desired = target.sub(this.position);
-        var distance = desired.length;
+        let desired = target.sub(this.position);
+        let distance = desired.length;
 
-        var desired = desired.normalize();
+        desired = desired.normalize();
         if(distance < radius) {
             desired = desired.mul(this.maxspeed * distance / SLOWING_RADIUS);
         } else {
             desired = desired.mul(this.maxspeed);
         }
 
-        var steering_force = desired.sub(this.velocity);        
+        let steering_force = desired.sub(this.velocity);        
 
         return steering_force;
     }
@@ -241,11 +241,11 @@ class Boid {
     // Avoid the most threatening obstacle
     avoid = (obstacles) => {
         var threat = Proximity.getMostThreatening(obstacles);
-        var avoidance_force = new Vector(0.0, 0.0);
+        let avoidance_force = new Vector(0.0, 0.0);
         if(threat != null) {
             var push_vector = this.position.sub(threat);
-            var avoidance_force = VectorOps.perpendicularComp(push_vector, this.velocity.normalize());
-            avoidance_force = avoidance_force.normalize().mul(MAX_AVOIDANCE);
+            avoidance_force = VectorOps.perpendicularComp(push_vector, this.velocity.normalize());
+            avoidance_force = this.norm_scale(avoidance_force, MAX_AVOIDANCE);
         }
         
         return avoidance_force;
