@@ -33,15 +33,21 @@ export default class Palette extends Component {
     }
 
     drawStartPoint = (e) => {
-        var point = new Vector(e.clientX, e.clientY);
-        var drawnPt = Painter.drawPoint(point, 5, "#00FF00");
-        this.props.addStartPt(drawnPt);
+        // Point in local coordinates (canvas)
+        var canvas_pt = new Vector(e.clientX, e.clientY);
+        Painter.drawPoint(canvas_pt, 5, "#00FF00");
+        // Convert local coordinates to global coordinates
+        var pt = Painter.local2global(canvas_pt);
+        this.props.addStartPt(pt);
     }
 
     drawEndPoint = (e) => {
-        var point = new Vector(e.clientX, e.clientY);
-        var drawnPt = Painter.drawPoint(point, 5, "#FF0000");
-        this.props.addEndPt(drawnPt);
+        // Point in local coordinates (canvas)
+        var canvas_pt = new Vector(e.clientX, e.clientY);
+        Painter.drawPoint(canvas_pt, 5, "#FF0000");
+        // Convert local coordinates to global coordinates
+        var pt = Painter.local2global(canvas_pt);
+        this.props.addEndPt(pt);
     }
 
     drawObstacle = (e) => {

@@ -5,6 +5,8 @@ import Boid from './js/boid';
 import Painter from './js/painter';
 import Controls from './components/Controls';
 import { EPSILON } from './js/const';
+import VectorOps from './js/vectorops';
+import Lattice from './js/lattice';
 
 class App extends Component {
     constructor(props) {
@@ -61,41 +63,28 @@ class App extends Component {
         this.setState({ walls : walls });
     }
 
-    update = () => {
-
-        var vehicle = {
-            position : this.state.startPt,
-            velocity : this.state.velocity,
-            wander : 0.0
-        };
-        var b = new Boid(vehicle);
+    seek = () => {
+        var v = this.state.startPt;
+        var b = new Boid(Math.random()*99, v);
         var target = this.state.endPt;
 
         var obstacles = this.state.obstacles;
         var walls = this.state.walls;
 
-        var distance = target.sub(vehicle.position).length;
+        var distance = target.sub(v).length;
         while(distance > EPSILON) {
-            b.avoid_and_seek(target, obstacles, walls);
+            b.seek_only(target);
             b.update();
-            distance = target.sub(vehicle.position).length; 
+            b.bound();
+            distance = target.sub(b.position).length;            
         }
+        // while(distance > EPSILON) {
+        //     b.avoid_and_seek(target, obstacles, walls);
+        //     b.update();
+        //     distance = target.sub(v).length; 
+        // }
 
-        this.setState({ startPt : vehicle.position, velocity : vehicle.velocity });
-    }
-
-    wander_only = () => {
-
-        var vehicle = {
-            position : this.state.startPt,
-            velocity : this.state.velocity,
-            wander : 0.0
-        };
-        var b = new Boid(vehicle);
-        for(var j = 0; j < 100; j++) {
-            b.wander_only();
-            b.update();
-        }
+        // this.setState({ startPt : v });
     }
 
     step_through = () => {
@@ -115,13 +104,7 @@ class App extends Component {
 
         this.setState({ startPt : vehicle.position, velocity : vehicle.velocity });
     }
-
-    startLoop = () => {
-        if(!this._frameId) {
-            this._frameId = window.requestAnimationFrame(this.wander);
-        }
-    }
-      
+    
     wander = () => {
         // perform loop work here
         var boids = this.state.boids;
@@ -157,7 +140,7 @@ class App extends Component {
         // Set up next iteration of the loop
         this._frameId = window.requestAnimationFrame(fn);
     }
-    
+   
     stopLoop = () => {
         window.cancelAnimationFrame(this._frameId);
         // Note: no need to worry if the loop has already been cancelled
@@ -183,8 +166,10 @@ class App extends Component {
     }
 
     global_init = (n) => {
-        var boids = this.state.boids;
+        var boids = this.state.boids;        
         var canvas = document.getElementById('nav-area');
+        // let bin_lattice = Lattice.init_bin();
+        // console.log(bin_lattice);
         for(var i = 0; i < n; i++) {
             // var pt = Boid.generateXY(canvas.width, canvas.height);
             var pt = new Vector(0, 0);
@@ -192,16 +177,25 @@ class App extends Component {
             var canvas_pt = Painter.global2local(pt);
             Painter.drawPoint(canvas_pt, 3, b.color);
             boids.push(b);
+            // Lattice.update_bin(bin_lattice, canvas_pt, b);
         }
+
+        // Lattice.update_bin(bin_lattice, new Vector(0, 0), null);
+
+        // console.log(bin_lattice);
+
+        // Lattice.remove(bin_lattice, new Vector(0, 0));
 
         this.setState({ boids : boids });
     }
 
     addStartPt = (start) => {
+        console.log('addStartPt', start);
         this.setState({ startPt : start });
     }
 
     addEndPt = (end) => {
+        console.log('addEndPt', end);
         this.setState({ endPt : end });
     }
 
@@ -227,7 +221,7 @@ class App extends Component {
                     addObstacle={(obs) => this.addObstacle(obs)}
                     clearObstacles={this.clearObstacles}
                     loadEnvironment={this.loadEnvironment}
-                    seek={this.update}
+                    seek={this.seek}
                     wander={this.wander}
                     flock={this.flock}
                     step_through={this.step_through}

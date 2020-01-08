@@ -21,7 +21,7 @@ class Boid {
         this.id = i;
         this.acceleration = new Vector(0, 0);
         this.velocity = Boid.generateXY(99, 99);
-        this.position = v
+        this.position = v;
         this.r = 3.0;
         this.maxspeed = 3;    // Maximum speed
         this.maxforce = 0.05; // Maximum acceleration force
@@ -116,21 +116,24 @@ class Boid {
     seek = (target, radius = 0) => {
         let desired = target.sub(this.position);
         let distance = desired.length;
-
-        desired = desired.normalize();
         if(distance < radius) {
-            desired = desired.mul(this.maxspeed * distance / SLOWING_RADIUS);
+            desired = this.norm_scale(desired, (this.maxspeed * (distance / radius)));
+            let steering_force = desired.sub(this.velocity);        
+            // steering_force = this.truncate(steering_force, this.maxforce);
+
+            return steering_force;
         } else {
-            desired = desired.mul(this.maxspeed);
-        }
+            desired = this.norm_scale(desired, this.maxspeed);
+            let steering_force = desired.sub(this.velocity);
+            // Ensures a natural movement by limiting the force applied, not required for arrival since speed is already limited
+            steering_force = this.truncate(steering_force, this.maxforce);
 
-        let steering_force = desired.sub(this.velocity);        
-
-        return steering_force;
+            return steering_force;
+        }        
     }
 
     arrive = (target) => {
-        return this.seek(target, SLOWING_RADIUS);
+        return this.seek(target, this.maxspeed*10);
     }
 
     pursuit = (target) => {
@@ -174,6 +177,21 @@ class Boid {
                 count++;            // Keep track of how many
             }
         }
+
+        // var canvas_pt = Painter.global2local(this.position);
+        // var neighbours = bin[VectorOps.getX(canvas_pt)][VectorOps.getY(canvas_pt)];
+        // for(let n=0; n<neighbours.length; n++) {
+        //     let b = neighbours[n];
+        //     let d = VectorOps.distance(this.position, b.position);
+        //     // If the distance is greater than 0 and less than an arbitrary amount (0 when you are yourself)
+        //     if ((d > 0) && (d < desiredseparation)) {
+        //         // Calculate vector pointing away from neighbor
+        //         let diff = this.position.sub(b.position);     
+        //         diff = this.norm_scale(diff, 1/d); // Weight by inverse distance
+        //         steer = steer.add(diff);
+        //         count++;            // Keep track of how many
+        //     }
+        // }
         // Average -- divide by how many
         if (count > 0) {
             steer = steer.mul(1/count);
@@ -316,20 +334,20 @@ class Boid {
     }
 
     update = () => {
-        var previous = this.position;
-        this.acceleration = this.truncate(this.acceleration, MAX_FORCE);
+        // this.acceleration = this.truncate(this.acceleration, MAX_FORCE);
         this.velocity = this.velocity.add(this.acceleration);
-        this.velocity = this.truncate(this.velocity, MAX_VELOCITY);
+        this.velocity = this.truncate(this.velocity, this.maxspeed);
         this.position = this.position.add(this.velocity);
 
-        Painter.drawLine(previous, this.position, '#FFA500');
+        var pt = Painter.global2local(this.position);
+        Painter.drawPoint(pt, 1, 'orange');
+
         this.reset();
     }
 
     update2 = () => {
-        // this.acceleration = this.truncate(this.acceleration, MAX_FORCE);
         this.velocity = this.velocity.add(this.acceleration);
-        this.velocity = this.truncate(this.velocity, MAX_VELOCITY);
+        this.velocity = this.truncate(this.velocity, this.maxspeed);
         this.position = this.position.add(this.velocity);        
        
         this.reset();
@@ -347,11 +365,19 @@ class Boid {
         this.acceleration = this.acceleration.add(f);
     }
 
-    truncate = (v, max) => {
-        var scale = max / v.length;
-        scale = (scale < 1.0) ? scale : 1.0;
+    truncate = (v, max) => {  
+        if(v.length > max) {
+            return v.normalize().mul(max);
+        }
+        else {
+            return v;
+        }
+        // var scale = max / v.length;
+        // console.log('Truncate: ', v, max, scale);
+        // scale = (scale < 1.0) ? scale : 1.0;
         
-        return v.mul(scale);
+        // console.log('Out: ', v.mul(scale));
+        // return v.mul(scale);
     }
 
     limit = (v, max) => {
@@ -393,32 +419,18 @@ class Boid {
         var corrected_y = y;
         var canvas = document.getElementById('nav-area');
         
-        var changed = false;
         if(x < -canvas.width/2) {
-            console.log('Minimum X bound hit '+this.id);
             corrected_x = x + canvas.width;
-            changed = true;
         }
         else if(x > canvas.width/2) {
-            console.log('Maximum X bound hit '+this.id);
             corrected_x = x - canvas.width;
-            changed = true;
         }
 
         if(y < -canvas.height/2) {
-            console.log('Minimum Y bound hit '+this.id);
             corrected_y = y + canvas.height;
-            changed = true;
         }
         else if(y > canvas.height/2) {
-            console.log('Maximum Y bound hit '+this.id);
             corrected_y = y - canvas.height;
-            changed = true;
-        }
-
-        if(changed) {
-            console.log(this.id+' before: '+x, y);
-            console.log(this.id+' after: '+corrected_x, corrected_y);
         }
 
         this.position = new Vector(corrected_x, corrected_y);
