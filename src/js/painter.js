@@ -111,11 +111,7 @@ class Painter {
         var canvas = document.getElementById('nav-area');
         const ctx = canvas.getContext("2d");
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.save();
-        // ctx.addGrid();
-        // this.drawTriangle(500, 500, 90);
-        // this.drawTriangle(600, 600, 45);
-        var rect = canvas.getBoundingClientRect();        
+        ctx.save();     
         for(var k in points) {
             // this.gradient_agent(ctx, rect, points[k], radius);
             var p = points[k].position;

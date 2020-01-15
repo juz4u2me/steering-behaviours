@@ -3,6 +3,11 @@ import '../css/controls.css';
 import { Vector } from "@glazier/vector-js";
 import Painter from '../js/painter';
 import { OBSTACLE_SIZE } from '../js/const';
+// Material-UI
+import { makeStyles } from '@material-ui/core/styles';
+import { AppBar, Toolbar, IconButton, Typography, Button, ButtonGroup } from '@material-ui/core';
+import MenuIcon from '@material-ui/icons/Menu';
+
 
 export default class Palette extends Component {
 
@@ -88,16 +93,29 @@ export default class Palette extends Component {
 
         return (
             <div className="controls">
-                <button className="toolbutton" onClick={this.place_start_pt}>Place Start Point</button>
-                <button className="toolbutton" onClick={this.place_end_pt}>Place End Point</button>
-                <button className="toolbutton" onClick={this.place_obstacle}>Place Obstacle</button>
-                <button className="toolbutton" onClick={this.clear_obstacles}>Clear Obstacles</button>
-                <button className="toolbutton" onClick={this.load_env}>Load Test Environment</button>
-                <button className="toolbutton" onClick={this.seek}>Seek</button>
-                <button className="toolbutton" onClick={this.wander}>Wander</button>
-                <button className="toolbutton" onClick={this.flock}>Flock</button>
-                <button className="toolbutton" onClick={this.step_through}>Step</button>
-                <button className="toolbutton" onClick={this.stop}>Stop</button>
+                {/* <AppBar className="appbar" position="static">
+                    <Toolbar>
+                        <IconButton edge="start" className="menuButton" color="inherit" aria-label="menu">
+                        <MenuIcon />
+                        </IconButton>
+                        <Typography variant="h6" className="title">
+                        Steering Behaviour
+                        </Typography>
+                        <Button color="inherit">Login</Button>
+                    </Toolbar>
+                </AppBar> */}
+                <ButtonGroup variant="contained" color="primary" aria-label="contained primary button group">
+                    <Button onClick={this.place_start_pt}>Place Start Point</Button>
+                    <Button onClick={this.place_end_pt}>Place End Point</Button>
+                    <Button onClick={this.place_obstacle}>Place Obstacle</Button>
+                    <Button onClick={this.clear_obstacles}>Clear Obstacles</Button>
+                    <Button onClick={this.load_env}>Load Test Environment</Button>
+                    <Button onClick={this.seek}>Seek</Button>
+                    <Button onClick={this.wander}>Wander</Button>
+                    <Button onClick={this.flock}>Flock</Button>
+                    <Button onClick={this.step_through}>Step</Button>
+                    <Button onClick={this.stop}>Stop</Button>
+                </ButtonGroup>
             </div>
         );
     }

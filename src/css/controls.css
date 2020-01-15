@@ -6,7 +6,7 @@
     flex-flow: column nowrap;
 }
 
-.toolbutton {
+/* .toolbutton {
     background: none;
     box-shadow: none;
     border: 0.5;
@@ -14,4 +14,17 @@
     color: #FFFFFF;
     width: 100px;
     height: 50px;
+} */
+
+.appbar {
+    /* flex-grow: 1; */
+    padding: 0 0 0 0;
+}
+
+.menuButton {
+    margin-right: 8px;
+}
+
+.title {
+    flex-grow: 1;
 }

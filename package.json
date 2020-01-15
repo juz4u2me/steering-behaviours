@@ -4,6 +4,8 @@
   "private": true,
   "dependencies": {
     "@glazier/vector-js": "^1.2.1",
+    "@material-ui/core": "^4.8.3",
+    "@material-ui/icons": "^4.5.1",
     "cesium": "^1.62.0",
     "react": "^16.11.0",
     "react-dom": "^16.11.0",
